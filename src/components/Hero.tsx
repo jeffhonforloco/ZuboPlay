@@ -1,9 +1,15 @@
 import { Button } from "@/components/ui/button";
+import { UserMenu } from "@/components/UserMenu";
 import zuboIcon from "@/assets/zubo-icon.jpg";
 
 export const Hero = () => {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-secondary via-secondary/80 to-accent/20 py-20 px-6">
+      {/* User Menu */}
+      <div className="absolute top-6 right-6 z-10">
+        <UserMenu />
+      </div>
+      
       <div className="container mx-auto max-w-6xl">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Text Content */}
