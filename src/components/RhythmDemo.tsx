@@ -1,9 +1,58 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Music2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+const notes = [261.63, 293.66, 329.63, 349.23, 392.00]; // C, D, E, F, G
 
 export const RhythmDemo = () => {
   const [activeNotes, setActiveNotes] = useState<number[]>([]);
+  const [score, setScore] = useState(0);
+  const [combo, setCombo] = useState(0);
+  const [hits, setHits] = useState(0);
+  const [total, setTotal] = useState(0);
+  const { toast } = useToast();
+  
+  const playNote = useCallback((frequency: number) => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = frequency;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.3);
+  }, []);
+
+  const handleNoteClick = useCallback((index: number) => {
+    playNote(notes[index]);
+    
+    if (activeNotes.includes(index)) {
+      // Hit!
+      setScore(prev => prev + 100 + (combo * 10));
+      setCombo(prev => prev + 1);
+      setHits(prev => prev + 1);
+      setTotal(prev => prev + 1);
+      
+      if (combo > 0 && combo % 10 === 0) {
+        toast({
+          title: `${combo} Combo!`,
+          description: "You're on fire! 🔥",
+        });
+      }
+    } else {
+      // Miss
+      setCombo(0);
+      setTotal(prev => prev + 1);
+    }
+  }, [activeNotes, combo, playNote, toast]);
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -49,9 +98,13 @@ export const RhythmDemo = () => {
             {/* Moving notes */}
             <div className="absolute inset-0 flex items-center">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex-1 flex justify-center items-center">
+                <button
+                  key={i}
+                  onClick={() => handleNoteClick(i)}
+                  className="flex-1 flex justify-center items-center cursor-pointer hover:bg-accent/5 transition-colors relative"
+                >
                   {activeNotes.includes(i) && (
-                    <div className="w-16 h-16 bg-accent rounded-full animate-ping" />
+                    <div className="absolute w-16 h-16 bg-accent rounded-full animate-ping" />
                   )}
                   <div 
                     className={`w-12 h-12 rounded-full border-4 transition-all ${
@@ -60,12 +113,12 @@ export const RhythmDemo = () => {
                         : "bg-background border-accent/30"
                     }`}
                   />
-                </div>
+                </button>
               ))}
             </div>
 
             {/* Jump indicator */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none">
               <div className="text-sm font-bold bg-foreground text-background px-6 py-2 rounded-full">
                 TAP TO JUMP
               </div>
@@ -75,15 +128,17 @@ export const RhythmDemo = () => {
           {/* Gameplay stats */}
           <div className="grid grid-cols-3 gap-4 mt-8">
             <div className="text-center p-4 bg-primary/10 rounded-xl">
-              <div className="text-3xl font-black text-primary">1,234</div>
+              <div className="text-3xl font-black text-primary">{score.toLocaleString()}</div>
               <div className="text-sm text-muted-foreground">Score</div>
             </div>
             <div className="text-center p-4 bg-accent/10 rounded-xl">
-              <div className="text-3xl font-black text-accent">42</div>
+              <div className="text-3xl font-black text-accent">{combo}</div>
               <div className="text-sm text-muted-foreground">Combo</div>
             </div>
             <div className="text-center p-4 bg-secondary/20 rounded-xl">
-              <div className="text-3xl font-black text-secondary-foreground">98%</div>
+              <div className="text-3xl font-black text-secondary-foreground">
+                {total > 0 ? Math.round((hits / total) * 100) : 0}%
+              </div>
               <div className="text-sm text-muted-foreground">Accuracy</div>
             </div>
           </div>
