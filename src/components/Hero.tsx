@@ -23,7 +23,11 @@ export const Hero = () => {
               Every creation changes the game. Infinite adventures await.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-4">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg px-8 py-6 rounded-full shadow-[0_8px_32px_hsl(var(--primary)/0.3)] hover:scale-105 transition-transform">
+              <Button 
+                size="lg" 
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg px-8 py-6 rounded-full shadow-[0_8px_32px_hsl(var(--primary)/0.3)] hover:scale-105 transition-transform"
+                onClick={() => document.getElementById('creator')?.scrollIntoView({ behavior: 'smooth' })}
+              >
                 Create Your Zubo
               </Button>
               

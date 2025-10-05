@@ -1,7 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 type BodyType = "sphere" | "cube" | "tube";
 type LegType = "springy" | "short";
@@ -18,6 +22,63 @@ export const ZuboCreator = () => {
   const [bodyType, setBodyType] = useState<BodyType>("sphere");
   const [legType, setLegType] = useState<LegType>("springy");
   const [color, setColor] = useState(bodyColors[0].value);
+  const [isSaving, setIsSaving] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleSave = async () => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to save your Zubo design",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const zuboDesign = { bodyType, legType, color };
+      
+      const { error } = await supabase
+        .from("profiles")
+        .update({ favorite_zubo_design: zuboDesign })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Zubo saved!",
+        description: "Your unique Zubo design has been saved to your profile",
+      });
+    } catch (error) {
+      console.error("Error saving Zubo:", error);
+      toast({
+        title: "Save failed",
+        description: "Failed to save your Zubo. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRandomize = () => {
+    const randomBody = (["sphere", "cube", "tube"] as BodyType[])[Math.floor(Math.random() * 3)];
+    const randomLeg = (["springy", "short"] as LegType[])[Math.floor(Math.random() * 2)];
+    const randomColor = bodyColors[Math.floor(Math.random() * bodyColors.length)].value;
+    
+    setBodyType(randomBody);
+    setLegType(randomLeg);
+    setColor(randomColor);
+    
+    toast({
+      title: "Random Zubo generated!",
+      description: "Here's a unique random design for you",
+    });
+  };
 
   const renderZuboPreview = () => {
     const bodyClass = bodyType === "sphere" 
@@ -81,12 +142,15 @@ export const ZuboCreator = () => {
             <div className="mt-8 flex gap-4">
               <Button 
                 className="flex-1 bg-primary hover:bg-primary/90 font-bold rounded-full"
+                onClick={handleSave}
+                disabled={isSaving}
               >
-                Save Zubo
+                {isSaving ? "Saving..." : "Save Zubo"}
               </Button>
               <Button 
                 variant="outline"
                 className="border-2 rounded-full"
+                onClick={handleRandomize}
               >
                 <Sparkles className="w-4 h-4 mr-2" />
                 AI Random
