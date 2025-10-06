@@ -6,6 +6,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Play, Pause, RotateCcw } from "lucide-react";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import * as THREE from "three";
 
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 400;
@@ -29,7 +32,6 @@ const Game = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   
   const [gameState, setGameState] = useState<"idle" | "playing" | "paused" | "gameover">("idle");
@@ -284,75 +286,8 @@ const Game = () => {
     };
   }, [gameState, zuboVelocity, zuboY, obstacles, generateObstacle, playCoinSound]);
 
-  // Draw game
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Clear canvas
-    ctx.fillStyle = "#1A1F2C";
-    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-    // Draw ground
-    ctx.fillStyle = "#403E43";
-    ctx.fillRect(0, GAME_HEIGHT - 50, GAME_WIDTH, 50);
-
-    // Draw obstacles
-    obstacles.forEach(obs => {
-      if (obs.type === "spike") {
-        ctx.fillStyle = "#DC2626";
-        ctx.beginPath();
-        ctx.moveTo(obs.x + obs.width / 2, obs.y);
-        ctx.lineTo(obs.x, obs.y + obs.height);
-        ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
-        ctx.closePath();
-        ctx.fill();
-      } else if (obs.type === "coin") {
-        // Draw musical note coin
-        ctx.fillStyle = "#FFD700";
-        ctx.beginPath();
-        ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.width / 2, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Draw music note symbol
-        ctx.fillStyle = "#000";
-        ctx.font = "20px Arial";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("♪", obs.x + obs.width / 2, obs.y + obs.height / 2);
-      } else {
-        ctx.fillStyle = "#9b87f5";
-        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-      }
-    });
-
-    // Draw Zubo
-    const zuboX = 100;
-    ctx.fillStyle = zuboDesign.color;
-    
-    if (zuboDesign.bodyType === "sphere") {
-      ctx.beginPath();
-      ctx.arc(zuboX + ZUBO_SIZE / 2, zuboY + ZUBO_SIZE / 2, ZUBO_SIZE / 2, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (zuboDesign.bodyType === "cube") {
-      ctx.fillRect(zuboX, zuboY, ZUBO_SIZE, ZUBO_SIZE);
-    } else {
-      ctx.fillRect(zuboX + 10, zuboY, ZUBO_SIZE - 20, ZUBO_SIZE);
-    }
-
-    // Draw legs
-    ctx.fillStyle = zuboDesign.color;
-    if (zuboDesign.legType === "springy") {
-      ctx.fillRect(zuboX + 10, zuboY + ZUBO_SIZE, 10, 15);
-      ctx.fillRect(zuboX + ZUBO_SIZE - 20, zuboY + ZUBO_SIZE, 10, 15);
-    } else {
-      ctx.fillRect(zuboX + 15, zuboY + ZUBO_SIZE, 8, 8);
-      ctx.fillRect(zuboX + ZUBO_SIZE - 23, zuboY + ZUBO_SIZE, 8, 8);
-    }
-  }, [obstacles, zuboY, zuboDesign]);
+  // Import the 3D scene component
+  const Game3DScene = require("@/components/game/Game3DScene").Game3DScene;
 
   const saveScore = async () => {
     if (!user) return;
@@ -421,13 +356,20 @@ const Game = () => {
           </div>
 
           <div className="relative bg-muted/30 rounded-xl overflow-hidden mx-auto" style={{ maxWidth: "100%", width: GAME_WIDTH, height: GAME_HEIGHT }}>
-            <canvas
-              ref={canvasRef}
-              width={GAME_WIDTH}
-              height={GAME_HEIGHT}
+            <Canvas
+              shadows
               onClick={jump}
               className="cursor-pointer"
-            />
+              style={{ width: "100%", height: "100%" }}
+            >
+              <PerspectiveCamera makeDefault position={[0, 0, 12]} fov={50} />
+              <Game3DScene
+                zuboY={zuboY}
+                zuboDesign={zuboDesign}
+                obstacles={obstacles}
+                isJumping={isJumping}
+              />
+            </Canvas>
             
             {gameState === "idle" && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/80">
