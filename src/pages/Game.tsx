@@ -36,6 +36,7 @@ const Game = () => {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [coins, setCoins] = useState(3);
+  const [timeElapsed, setTimeElapsed] = useState(0);
   
   const [zuboY, setZuboY] = useState(GAME_HEIGHT - ZUBO_SIZE - 50);
   const [zuboVelocity, setZuboVelocity] = useState(0);
@@ -203,6 +204,17 @@ const Game = () => {
     };
   }, [jump]);
 
+  // Timer effect
+  useEffect(() => {
+    if (gameState !== "playing") return;
+    
+    const timerInterval = setInterval(() => {
+      setTimeElapsed(prev => prev + 1);
+    }, 1000);
+    
+    return () => clearInterval(timerInterval);
+  }, [gameState]);
+
   // Game loop
   useEffect(() => {
     if (gameState !== "playing") return;
@@ -292,65 +304,218 @@ const Game = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Clear canvas
-    ctx.fillStyle = "#1A1F2C";
+    // Clear canvas with gradient sky
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
+    skyGradient.addColorStop(0, "#87CEEB");
+    skyGradient.addColorStop(1, "#E0F6FF");
+    ctx.fillStyle = skyGradient;
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    // Draw ground
-    ctx.fillStyle = "#403E43";
+    // Draw ground with cartoon style
+    const groundGradient = ctx.createLinearGradient(0, GAME_HEIGHT - 50, 0, GAME_HEIGHT);
+    groundGradient.addColorStop(0, "#8BC34A");
+    groundGradient.addColorStop(1, "#689F38");
+    ctx.fillStyle = groundGradient;
     ctx.fillRect(0, GAME_HEIGHT - 50, GAME_WIDTH, 50);
+    
+    // Ground outline
+    ctx.strokeStyle = "#558B2F";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, GAME_HEIGHT - 50);
+    ctx.lineTo(GAME_WIDTH, GAME_HEIGHT - 50);
+    ctx.stroke();
 
-    // Draw obstacles
+    // Draw obstacles with cartoon style
     obstacles.forEach(obs => {
       if (obs.type === "spike") {
-        ctx.fillStyle = "#DC2626";
+        // Spike with cartoon outline
+        ctx.fillStyle = "#FF4444";
         ctx.beginPath();
         ctx.moveTo(obs.x + obs.width / 2, obs.y);
         ctx.lineTo(obs.x, obs.y + obs.height);
         ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
         ctx.closePath();
         ctx.fill();
+        
+        // Spike outline
+        ctx.strokeStyle = "#CC0000";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        
+        // Highlight
+        ctx.fillStyle = "#FF8888";
+        ctx.beginPath();
+        ctx.moveTo(obs.x + obs.width / 2, obs.y + 5);
+        ctx.lineTo(obs.x + 5, obs.y + obs.height - 5);
+        ctx.lineTo(obs.x + obs.width / 2 - 3, obs.y + obs.height - 5);
+        ctx.closePath();
+        ctx.fill();
       } else if (obs.type === "coin") {
-        // Draw musical note coin
+        // Coin with glow effect
+        const glowGradient = ctx.createRadialGradient(
+          obs.x + obs.width / 2, obs.y + obs.height / 2, 0,
+          obs.x + obs.width / 2, obs.y + obs.height / 2, obs.width / 2 + 5
+        );
+        glowGradient.addColorStop(0, "#FFD700");
+        glowGradient.addColorStop(0.7, "#FFA500");
+        glowGradient.addColorStop(1, "rgba(255, 165, 0, 0)");
+        
+        ctx.fillStyle = glowGradient;
+        ctx.beginPath();
+        ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.width / 2 + 5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Main coin
         ctx.fillStyle = "#FFD700";
         ctx.beginPath();
         ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.width / 2, 0, Math.PI * 2);
         ctx.fill();
         
-        // Draw music note symbol
+        // Coin outline
+        ctx.strokeStyle = "#DAA520";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Music note symbol
         ctx.fillStyle = "#000";
-        ctx.font = "20px Arial";
+        ctx.font = "bold 20px Arial";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText("♪", obs.x + obs.width / 2, obs.y + obs.height / 2);
       } else {
-        ctx.fillStyle = "#9b87f5";
+        // Platform with cartoon style
+        const platformGradient = ctx.createLinearGradient(obs.x, obs.y, obs.x, obs.y + obs.height);
+        platformGradient.addColorStop(0, "#9b87f5");
+        platformGradient.addColorStop(1, "#7E69D6");
+        ctx.fillStyle = platformGradient;
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        
+        // Platform outline
+        ctx.strokeStyle = "#6B5AC7";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+        
+        // Highlight on top
+        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.fillRect(obs.x + 2, obs.y + 2, obs.width - 4, obs.height / 3);
       }
     });
 
-    // Draw Zubo
+    // Draw Zubo with cartoon style
     const zuboX = 100;
-    ctx.fillStyle = zuboDesign.color;
     
+    // Shadow
+    ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+    ctx.beginPath();
+    ctx.ellipse(zuboX + ZUBO_SIZE / 2, GAME_HEIGHT - 45, ZUBO_SIZE / 2, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Zubo body
     if (zuboDesign.bodyType === "sphere") {
+      // Gradient for sphere
+      const bodyGradient = ctx.createRadialGradient(
+        zuboX + ZUBO_SIZE / 2 - 10, zuboY + ZUBO_SIZE / 2 - 10, 5,
+        zuboX + ZUBO_SIZE / 2, zuboY + ZUBO_SIZE / 2, ZUBO_SIZE / 2
+      );
+      bodyGradient.addColorStop(0, lightenColor(zuboDesign.color, 30));
+      bodyGradient.addColorStop(1, zuboDesign.color);
+      
+      ctx.fillStyle = bodyGradient;
       ctx.beginPath();
       ctx.arc(zuboX + ZUBO_SIZE / 2, zuboY + ZUBO_SIZE / 2, ZUBO_SIZE / 2, 0, Math.PI * 2);
       ctx.fill();
+      
+      // Outline
+      ctx.strokeStyle = darkenColor(zuboDesign.color, 30);
+      ctx.lineWidth = 3;
+      ctx.stroke();
     } else if (zuboDesign.bodyType === "cube") {
+      // Gradient for cube
+      const bodyGradient = ctx.createLinearGradient(zuboX, zuboY, zuboX, zuboY + ZUBO_SIZE);
+      bodyGradient.addColorStop(0, lightenColor(zuboDesign.color, 20));
+      bodyGradient.addColorStop(1, zuboDesign.color);
+      
+      ctx.fillStyle = bodyGradient;
       ctx.fillRect(zuboX, zuboY, ZUBO_SIZE, ZUBO_SIZE);
+      
+      // Outline
+      ctx.strokeStyle = darkenColor(zuboDesign.color, 30);
+      ctx.lineWidth = 3;
+      ctx.strokeRect(zuboX, zuboY, ZUBO_SIZE, ZUBO_SIZE);
     } else {
+      // Tube
+      const bodyGradient = ctx.createLinearGradient(zuboX + 10, zuboY, zuboX + 10, zuboY + ZUBO_SIZE);
+      bodyGradient.addColorStop(0, lightenColor(zuboDesign.color, 20));
+      bodyGradient.addColorStop(1, zuboDesign.color);
+      
+      ctx.fillStyle = bodyGradient;
       ctx.fillRect(zuboX + 10, zuboY, ZUBO_SIZE - 20, ZUBO_SIZE);
+      
+      // Outline
+      ctx.strokeStyle = darkenColor(zuboDesign.color, 30);
+      ctx.lineWidth = 3;
+      ctx.strokeRect(zuboX + 10, zuboY, ZUBO_SIZE - 20, ZUBO_SIZE);
     }
 
-    // Draw legs
-    ctx.fillStyle = zuboDesign.color;
+    // Draw eyes
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.arc(zuboX + ZUBO_SIZE / 2 - 10, zuboY + ZUBO_SIZE / 2 - 5, 6, 0, Math.PI * 2);
+    ctx.arc(zuboX + ZUBO_SIZE / 2 + 10, zuboY + ZUBO_SIZE / 2 - 5, 6, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = "#000000";
+    ctx.beginPath();
+    ctx.arc(zuboX + ZUBO_SIZE / 2 - 10, zuboY + ZUBO_SIZE / 2 - 5, 3, 0, Math.PI * 2);
+    ctx.arc(zuboX + ZUBO_SIZE / 2 + 10, zuboY + ZUBO_SIZE / 2 - 5, 3, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Draw smile
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(zuboX + ZUBO_SIZE / 2, zuboY + ZUBO_SIZE / 2 + 5, 12, 0, Math.PI);
+    ctx.stroke();
+
+    // Draw legs with outline
     if (zuboDesign.legType === "springy") {
+      ctx.fillStyle = zuboDesign.color;
       ctx.fillRect(zuboX + 10, zuboY + ZUBO_SIZE, 10, 15);
       ctx.fillRect(zuboX + ZUBO_SIZE - 20, zuboY + ZUBO_SIZE, 10, 15);
+      
+      ctx.strokeStyle = darkenColor(zuboDesign.color, 30);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(zuboX + 10, zuboY + ZUBO_SIZE, 10, 15);
+      ctx.strokeRect(zuboX + ZUBO_SIZE - 20, zuboY + ZUBO_SIZE, 10, 15);
     } else {
+      ctx.fillStyle = zuboDesign.color;
       ctx.fillRect(zuboX + 15, zuboY + ZUBO_SIZE, 8, 8);
       ctx.fillRect(zuboX + ZUBO_SIZE - 23, zuboY + ZUBO_SIZE, 8, 8);
+      
+      ctx.strokeStyle = darkenColor(zuboDesign.color, 30);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(zuboX + 15, zuboY + ZUBO_SIZE, 8, 8);
+      ctx.strokeRect(zuboX + ZUBO_SIZE - 23, zuboY + ZUBO_SIZE, 8, 8);
+    }
+    
+    // Helper functions for color manipulation
+    function lightenColor(color: string, percent: number): string {
+      const num = parseInt(color.replace("#",""), 16);
+      const amt = Math.round(2.55 * percent);
+      const R = (num >> 16) + amt;
+      const G = (num >> 8 & 0x00FF) + amt;
+      const B = (num & 0x0000FF) + amt;
+      return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
+    }
+    
+    function darkenColor(color: string, percent: number): string {
+      const num = parseInt(color.replace("#",""), 16);
+      const amt = Math.round(2.55 * percent);
+      const R = (num >> 16) - amt;
+      const G = (num >> 8 & 0x00FF) - amt;
+      const B = (num & 0x0000FF) - amt;
+      return "#" + (0x1000000 + (R>0?R:0)*0x10000 + (G>0?G:0)*0x100 + (B>0?B:0)).toString(16).slice(1);
     }
   }, [obstacles, zuboY, zuboDesign]);
 
@@ -381,10 +546,17 @@ const Game = () => {
     setGameState("playing");
     setScore(0);
     setCoins(3);
+    setTimeElapsed(0);
     setZuboY(GAME_HEIGHT - ZUBO_SIZE - 50);
     setZuboVelocity(0);
     setObstacles([]);
     setScrollOffset(0);
+  };
+  
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -399,28 +571,32 @@ const Game = () => {
           Back to Home
         </Button>
 
-        <Card className="p-8">
+        <Card className="p-8 bg-gradient-to-br from-card via-card to-primary/5 shadow-xl border-4">
           <div className="text-center mb-6">
-            <h1 className="text-2xl md:text-4xl font-black text-foreground mb-2">Zubo Jump</h1>
+            <h1 className="text-2xl md:text-4xl font-black text-foreground mb-2 drop-shadow-lg">Zubo Jump</h1>
             <p className="text-sm md:text-base text-muted-foreground">Tap or Press Space to Jump!</p>
           </div>
 
           <div className="flex justify-between mb-4 gap-2">
-            <div className="text-center">
-              <div className="text-xl md:text-2xl font-bold text-primary">{score}</div>
+            <div className="text-center bg-primary/10 px-4 py-2 rounded-xl border-2 border-primary/20">
+              <div className="text-xl md:text-2xl font-bold text-primary drop-shadow">{score}</div>
               <div className="text-xs md:text-sm text-muted-foreground">Score</div>
             </div>
-            <div className="text-center">
-              <div className="text-xl md:text-2xl font-bold text-accent">{highScore}</div>
+            <div className="text-center bg-secondary/10 px-4 py-2 rounded-xl border-2 border-secondary/20">
+              <div className="text-xl md:text-2xl font-bold text-secondary drop-shadow">{formatTime(timeElapsed)}</div>
+              <div className="text-xs md:text-sm text-muted-foreground">Time</div>
+            </div>
+            <div className="text-center bg-accent/10 px-4 py-2 rounded-xl border-2 border-accent/20">
+              <div className="text-xl md:text-2xl font-bold text-accent drop-shadow">{highScore}</div>
               <div className="text-xs md:text-sm text-muted-foreground">High Score</div>
             </div>
-            <div className="text-center">
+            <div className="text-center bg-muted px-4 py-2 rounded-xl border-2 border-border">
               <div className="text-xl md:text-2xl font-bold">{"🎵".repeat(Math.max(0, coins))}</div>
-              <div className="text-xs md:text-sm text-muted-foreground">Note Coins</div>
+              <div className="text-xs md:text-sm text-muted-foreground">Lives</div>
             </div>
           </div>
 
-          <div className="relative bg-muted/30 rounded-xl overflow-hidden mx-auto" style={{ maxWidth: "100%", width: GAME_WIDTH, height: GAME_HEIGHT }}>
+          <div className="relative bg-gradient-to-b from-accent/5 to-primary/5 rounded-2xl overflow-hidden mx-auto border-4 border-primary/20 shadow-2xl" style={{ maxWidth: "100%", width: GAME_WIDTH, height: GAME_HEIGHT }}>
             <canvas
               ref={canvasRef}
               width={GAME_WIDTH}
@@ -430,10 +606,10 @@ const Game = () => {
             />
             
             {gameState === "idle" && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/80">
-                <div className="text-center">
-                  <h2 className="text-3xl font-bold mb-4">Ready to Jump?</h2>
-                  <Button size="lg" onClick={startGame}>
+              <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
+                <div className="text-center animate-bounce-slow">
+                  <h2 className="text-3xl font-bold mb-4 drop-shadow-lg">Ready to Jump?</h2>
+                  <Button size="lg" onClick={startGame} className="shadow-lg hover:shadow-xl transition-shadow">
                     <Play className="w-4 h-4 mr-2" />
                     Start Game
                   </Button>
@@ -442,10 +618,10 @@ const Game = () => {
             )}
 
             {gameState === "paused" && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+              <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
                 <div className="text-center">
-                  <h2 className="text-3xl font-bold mb-4">Paused</h2>
-                  <Button size="lg" onClick={() => setGameState("playing")}>
+                  <h2 className="text-3xl font-bold mb-4 drop-shadow-lg">Paused</h2>
+                  <Button size="lg" onClick={() => setGameState("playing")} className="shadow-lg hover:shadow-xl transition-shadow">
                     <Play className="w-4 h-4 mr-2" />
                     Resume
                   </Button>
@@ -454,11 +630,12 @@ const Game = () => {
             )}
 
             {gameState === "gameover" && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+              <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
                 <div className="text-center">
-                  <h2 className="text-3xl font-bold mb-2">Game Over!</h2>
-                  <p className="text-xl mb-4">Final Score: {score}</p>
-                  <Button size="lg" onClick={startGame}>
+                  <h2 className="text-3xl font-bold mb-2 drop-shadow-lg text-destructive">Game Over!</h2>
+                  <p className="text-xl mb-2">Final Score: <span className="font-bold text-primary">{score}</span></p>
+                  <p className="text-lg mb-4">Time Survived: <span className="font-bold text-secondary">{formatTime(timeElapsed)}</span></p>
+                  <Button size="lg" onClick={startGame} className="shadow-lg hover:shadow-xl transition-shadow">
                     <RotateCcw className="w-4 h-4 mr-2" />
                     Play Again
                   </Button>
@@ -469,7 +646,7 @@ const Game = () => {
 
           <div className="mt-6 flex gap-4 justify-center">
             {gameState === "playing" && (
-              <Button variant="outline" onClick={() => setGameState("paused")}>
+              <Button variant="outline" onClick={() => setGameState("paused")} className="shadow-md hover:shadow-lg transition-shadow border-2">
                 <Pause className="w-4 h-4 mr-2" />
                 Pause
               </Button>
