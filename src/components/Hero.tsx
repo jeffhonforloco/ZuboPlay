@@ -3,10 +3,8 @@ import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/UserMenu";
 import { Play } from "lucide-react";
 import zuboIcon from "@/assets/zubo-icon.jpg";
-
 export const Hero = () => {
   const navigate = useNavigate();
-  
   return <section className="relative overflow-hidden bg-gradient-to-br from-secondary via-secondary/80 to-accent/20 py-20 px-6">
       {/* User Menu */}
       <div className="absolute top-6 right-6 z-10">
@@ -28,21 +26,14 @@ export const Hero = () => {
               Every creation changes the game. Infinite adventures await.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-4">
-              <Button 
-                size="lg" 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg px-8 py-6 rounded-full shadow-[0_8px_32px_hsl(var(--primary)/0.3)] hover:scale-105 transition-transform"
-                onClick={() => navigate("/game")}
-              >
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg px-8 py-6 rounded-full shadow-[0_8px_32px_hsl(var(--primary)/0.3)] hover:scale-105 transition-transform" onClick={() => navigate("/game")}>
                 <Play className="w-5 h-5 mr-2" />
                 Play Now
               </Button>
               
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="border-2 font-bold text-lg px-8 py-6 rounded-full hover:scale-105 transition-transform"
-                onClick={() => document.getElementById('creator')?.scrollIntoView({ behavior: 'smooth' })}
-              >
+              <Button size="lg" variant="outline" className="border-2 font-bold text-lg px-8 py-6 rounded-full hover:scale-105 transition-transform" onClick={() => document.getElementById('creator')?.scrollIntoView({
+              behavior: 'smooth'
+            })}>
                 Create Your Zubo
               </Button>
             </div>
@@ -53,7 +44,7 @@ export const Hero = () => {
               }} />)}
               </div>
               <p className="text-sm font-medium text-foreground/70">
-                Join <span className="text-primary font-bold">10,000+</span> players creating Zubos
+                Join  players creating Zubos
               </p>
             </div>
           </div>
