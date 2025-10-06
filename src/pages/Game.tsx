@@ -7,8 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Play, Pause, RotateCcw } from "lucide-react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import * as THREE from "three";
+import { PerspectiveCamera } from "@react-three/drei";
+import { Game3DScene } from "@/components/game/Game3DScene";
 
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 400;
@@ -285,9 +285,6 @@ const Game = () => {
       }
     };
   }, [gameState, zuboVelocity, zuboY, obstacles, generateObstacle, playCoinSound]);
-
-  // Import the 3D scene component
-  const Game3DScene = require("@/components/game/Game3DScene").Game3DScene;
 
   const saveScore = async () => {
     if (!user) return;
