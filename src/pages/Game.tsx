@@ -19,7 +19,7 @@ type Obstacle = {
   y: number;
   width: number;
   height: number;
-  type: "platform" | "spike";
+  type: "platform" | "spike" | "coin";
 };
 
 type BodyType = "sphere" | "cube" | "tube";
@@ -35,7 +35,7 @@ const Game = () => {
   const [gameState, setGameState] = useState<"idle" | "playing" | "paused" | "gameover">("idle");
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
-  const [lives, setLives] = useState(3);
+  const [coins, setCoins] = useState(3);
   
   const [zuboY, setZuboY] = useState(GAME_HEIGHT - ZUBO_SIZE - 50);
   const [zuboVelocity, setZuboVelocity] = useState(0);
@@ -82,9 +82,19 @@ const Game = () => {
   const generateObstacle = useCallback((lastX: number): Obstacle => {
     const gap = 200 + Math.random() * 200;
     const x = lastX + gap;
-    const isSpike = Math.random() > 0.5;
+    const rand = Math.random();
     
-    if (isSpike) {
+    if (rand > 0.7) {
+      // Coin
+      return {
+        x,
+        y: GAME_HEIGHT - 150 - Math.random() * 150,
+        width: 30,
+        height: 30,
+        type: "coin"
+      };
+    } else if (rand > 0.4) {
+      // Spike
       return {
         x,
         y: GAME_HEIGHT - 70,
@@ -93,6 +103,7 @@ const Game = () => {
         type: "spike"
       };
     } else {
+      // Platform
       return {
         x,
         y: GAME_HEIGHT - 150 - Math.random() * 100,
@@ -124,7 +135,32 @@ const Game = () => {
       setZuboVelocity(JUMP_FORCE);
       setIsJumping(true);
       
-      // Play jump sound
+      // Play jump sound (musical note)
+      try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 523.25; // C5 note
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.15);
+      } catch (e) {
+        console.log('Audio not supported');
+      }
+    }
+  }, [gameState, isJumping]);
+
+  // Play coin collection sound
+  const playCoinSound = useCallback(() => {
+    try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
@@ -132,18 +168,20 @@ const Game = () => {
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      oscillator.frequency.value = 440;
-      oscillator.type = 'square';
+      oscillator.frequency.value = 784; // G5 note
+      oscillator.type = 'sine';
       
-      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
       
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.2);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (e) {
+      console.log('Audio not supported');
     }
-  }, [gameState, isJumping]);
+  }, []);
 
-  // Keyboard controls
+  // Keyboard and touch controls
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.code === "Space") {
@@ -152,8 +190,17 @@ const Game = () => {
       }
     };
     
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      jump();
+    };
+    
     window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
+    window.addEventListener("touchstart", handleTouchStart, { passive: false });
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+      window.removeEventListener("touchstart", handleTouchStart);
+    };
   }, [jump]);
 
   // Game loop
@@ -206,17 +253,23 @@ const Game = () => {
           zuboY + ZUBO_SIZE > obs.y &&
           zuboY < obs.y + obs.height;
 
-        if (collision && obs.type === "spike") {
-          setLives(prev => {
-            const newLives = prev - 1;
-            if (newLives <= 0) {
-              setGameState("gameover");
-              saveScore();
-            }
-            return newLives;
-          });
-          // Remove the spike that hit
-          setObstacles(prev => prev.filter(o => o !== obs));
+        if (collision) {
+          if (obs.type === "spike") {
+            setCoins(prev => {
+              const newCoins = prev - 1;
+              if (newCoins <= 0) {
+                setGameState("gameover");
+                saveScore();
+              }
+              return newCoins;
+            });
+            setObstacles(prev => prev.filter(o => o !== obs));
+          } else if (obs.type === "coin") {
+            setCoins(prev => prev + 1);
+            setScore(prev => prev + 50);
+            playCoinSound();
+            setObstacles(prev => prev.filter(o => o !== obs));
+          }
         }
       });
 
@@ -229,7 +282,7 @@ const Game = () => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [gameState, zuboVelocity, zuboY, obstacles, generateObstacle]);
+  }, [gameState, zuboVelocity, zuboY, obstacles, generateObstacle, playCoinSound]);
 
   // Draw game
   useEffect(() => {
@@ -257,6 +310,19 @@ const Game = () => {
         ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
         ctx.closePath();
         ctx.fill();
+      } else if (obs.type === "coin") {
+        // Draw musical note coin
+        ctx.fillStyle = "#FFD700";
+        ctx.beginPath();
+        ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.width / 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw music note symbol
+        ctx.fillStyle = "#000";
+        ctx.font = "20px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("♪", obs.x + obs.width / 2, obs.y + obs.height / 2);
       } else {
         ctx.fillStyle = "#9b87f5";
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
@@ -314,7 +380,7 @@ const Game = () => {
   const startGame = () => {
     setGameState("playing");
     setScore(0);
-    setLives(3);
+    setCoins(3);
     setZuboY(GAME_HEIGHT - ZUBO_SIZE - 50);
     setZuboVelocity(0);
     setObstacles([]);
@@ -335,26 +401,26 @@ const Game = () => {
 
         <Card className="p-8">
           <div className="text-center mb-6">
-            <h1 className="text-4xl font-black text-foreground mb-2">Zubo Jump</h1>
-            <p className="text-muted-foreground">Tap Space or Click to Jump!</p>
+            <h1 className="text-2xl md:text-4xl font-black text-foreground mb-2">Zubo Jump</h1>
+            <p className="text-sm md:text-base text-muted-foreground">Tap or Press Space to Jump!</p>
           </div>
 
-          <div className="flex justify-between mb-4">
+          <div className="flex justify-between mb-4 gap-2">
             <div className="text-center">
-              <div className="text-2xl font-bold text-primary">{score}</div>
-              <div className="text-sm text-muted-foreground">Score</div>
+              <div className="text-xl md:text-2xl font-bold text-primary">{score}</div>
+              <div className="text-xs md:text-sm text-muted-foreground">Score</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-accent">{highScore}</div>
-              <div className="text-sm text-muted-foreground">High Score</div>
+              <div className="text-xl md:text-2xl font-bold text-accent">{highScore}</div>
+              <div className="text-xs md:text-sm text-muted-foreground">High Score</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-secondary-foreground">{"❤️".repeat(lives)}</div>
-              <div className="text-sm text-muted-foreground">Lives</div>
+              <div className="text-xl md:text-2xl font-bold">{"🎵".repeat(Math.max(0, coins))}</div>
+              <div className="text-xs md:text-sm text-muted-foreground">Note Coins</div>
             </div>
           </div>
 
-          <div className="relative bg-muted/30 rounded-xl overflow-hidden" style={{ width: GAME_WIDTH, height: GAME_HEIGHT, margin: "0 auto" }}>
+          <div className="relative bg-muted/30 rounded-xl overflow-hidden mx-auto" style={{ maxWidth: "100%", width: GAME_WIDTH, height: GAME_HEIGHT }}>
             <canvas
               ref={canvasRef}
               width={GAME_WIDTH}
@@ -410,8 +476,9 @@ const Game = () => {
             )}
           </div>
 
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>🎮 Press SPACE or CLICK to jump</p>
+          <div className="mt-6 text-center text-xs md:text-sm text-muted-foreground space-y-1">
+            <p>🎮 Tap Screen / Press SPACE to jump</p>
+            <p>🎵 Collect golden Note Coins for extra lives!</p>
             <p>⚠️ Avoid red spikes! Jump on purple platforms!</p>
           </div>
         </Card>
