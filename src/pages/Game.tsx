@@ -9,7 +9,7 @@ import { ArrowLeft, Play, Pause, RotateCcw } from "lucide-react";
 
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 400;
-const ZUBO_SIZE = 50;
+const ZUBO_SIZE = 60;
 const GRAVITY = 0.8;
 const JUMP_FORCE = -15;
 const GAME_SPEED = 5;
@@ -161,8 +161,39 @@ const Game = () => {
     }
   }, [gameState, isJumping]);
 
-  // Play coin collection sound
+  // Play coin collection sound (musical arpeggio)
   const playCoinSound = useCallback(() => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Play a musical arpeggio (C major chord)
+      const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+      
+      notes.forEach((frequency, index) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        
+        const startTime = audioContext.currentTime + (index * 0.08);
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + 0.2);
+      });
+    } catch (e) {
+      console.log('Audio not supported');
+    }
+  }, []);
+
+  // Play spike hit sound
+  const playSpikeSound = useCallback(() => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
@@ -171,14 +202,16 @@ const Game = () => {
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      oscillator.frequency.value = 784; // G5 note
-      oscillator.type = 'sine';
+      // Harsh descending tone for hitting spike
+      oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.2);
+      oscillator.type = 'sawtooth';
       
       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
       
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
+      oscillator.stop(audioContext.currentTime + 0.2);
     } catch (e) {
       console.log('Audio not supported');
     }
@@ -277,6 +310,7 @@ const Game = () => {
 
         if (collision) {
           if (obs.type === "spike") {
+            playSpikeSound();
             setCoins(prev => {
               const newCoins = prev - 1;
               if (newCoins <= 0) {
@@ -304,7 +338,7 @@ const Game = () => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [gameState, zuboVelocity, zuboY, obstacles, generateObstacle, playCoinSound]);
+  }, [gameState, zuboVelocity, zuboY, obstacles, generateObstacle, playCoinSound, playSpikeSound]);
 
   // Draw game
   useEffect(() => {
