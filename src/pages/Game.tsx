@@ -570,48 +570,49 @@ const Game = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8 px-6">
+    <div className="min-h-screen bg-background py-2 md:py-8 px-2 md:px-6">
       <div className="container mx-auto max-w-4xl">
         <Button
           variant="ghost"
           onClick={() => navigate("/")}
-          className="mb-6"
+          className="mb-2 md:mb-6 text-sm md:text-base"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home
         </Button>
 
-        <Card className="p-8 bg-gradient-to-br from-card via-card to-primary/5 shadow-xl border-4">
-          <div className="text-center mb-6">
-            <h1 className="text-2xl md:text-4xl font-black text-foreground mb-2 drop-shadow-lg">Zubo Jump</h1>
-            <p className="text-sm md:text-base text-muted-foreground">Tap or Press Space to Jump!</p>
+        <Card className="p-2 md:p-8 bg-gradient-to-br from-card via-card to-primary/5 shadow-xl border-2 md:border-4">
+          <div className="text-center mb-2 md:mb-6">
+            <h1 className="text-xl md:text-4xl font-black text-foreground mb-1 md:mb-2 drop-shadow-lg">Zubo Jump</h1>
+            <p className="text-xs md:text-base text-muted-foreground">Tap or Press Space to Jump!</p>
           </div>
 
-          <div className="flex justify-between mb-4 gap-2">
-            <div className="text-center bg-primary/10 px-4 py-2 rounded-xl border-2 border-primary/20">
-              <div className="text-xl md:text-2xl font-bold text-primary drop-shadow">{score}</div>
-              <div className="text-xs md:text-sm text-muted-foreground">Score</div>
+          <div className="grid grid-cols-2 md:flex md:justify-between mb-3 md:mb-4 gap-2">
+            <div className="text-center bg-primary/10 px-2 md:px-4 py-2 rounded-xl border-2 border-primary/20">
+              <div className="text-lg md:text-2xl font-bold text-primary drop-shadow">{score}</div>
+              <div className="text-xs text-muted-foreground">Score</div>
             </div>
-            <div className="text-center bg-secondary/10 px-4 py-2 rounded-xl border-2 border-secondary/20">
-              <div className="text-xl md:text-2xl font-bold text-secondary drop-shadow">{formatTime(timeElapsed)}</div>
-              <div className="text-xs md:text-sm text-muted-foreground">Time</div>
+            <div className="text-center bg-secondary/10 px-2 md:px-4 py-2 rounded-xl border-2 border-secondary/20">
+              <div className="text-lg md:text-2xl font-bold text-secondary drop-shadow">{formatTime(timeElapsed)}</div>
+              <div className="text-xs text-muted-foreground">Time</div>
             </div>
-            <div className="text-center bg-accent/10 px-4 py-2 rounded-xl border-2 border-accent/20">
-              <div className="text-xl md:text-2xl font-bold text-accent drop-shadow">{highScore}</div>
-              <div className="text-xs md:text-sm text-muted-foreground">High Score</div>
+            <div className="text-center bg-accent/10 px-2 md:px-4 py-2 rounded-xl border-2 border-accent/20">
+              <div className="text-lg md:text-2xl font-bold text-accent drop-shadow">{highScore}</div>
+              <div className="text-xs text-muted-foreground">High Score</div>
             </div>
-            <div className="text-center bg-muted px-4 py-2 rounded-xl border-2 border-border">
-              <div className="text-xl md:text-2xl font-bold">{"🎵".repeat(Math.max(0, coins))}</div>
-              <div className="text-xs md:text-sm text-muted-foreground">Lives</div>
+            <div className="text-center bg-muted px-2 md:px-4 py-2 rounded-xl border-2 border-border">
+              <div className="text-lg md:text-2xl font-bold">{"🎵".repeat(Math.max(0, coins))}</div>
+              <div className="text-xs text-muted-foreground">Lives</div>
             </div>
           </div>
 
           <div 
             ref={containerRef}
-            className="relative bg-gradient-to-b from-accent/5 to-primary/5 rounded-2xl overflow-hidden mx-auto border-4 border-primary/20 shadow-2xl w-full max-w-full"
+            className="relative bg-gradient-to-b from-accent/5 to-primary/5 rounded-xl md:rounded-2xl overflow-hidden mx-auto border-2 md:border-4 border-primary/20 shadow-2xl w-full"
             style={{ 
-              maxWidth: GAME_WIDTH,
-              aspectRatio: `${GAME_WIDTH} / ${GAME_HEIGHT}`
+              aspectRatio: `${GAME_WIDTH} / ${GAME_HEIGHT}`,
+              maxHeight: 'calc(100vh - 280px)',
+              minHeight: '300px'
             }}
           >
             <canvas
@@ -633,9 +634,9 @@ const Game = () => {
             
             {gameState === "idle" && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
-                <div className="text-center animate-bounce-slow">
-                  <h2 className="text-3xl font-bold mb-4 drop-shadow-lg">Ready to Jump?</h2>
-                  <Button size="lg" onClick={startGame} className="shadow-lg hover:shadow-xl transition-shadow">
+                <div className="text-center animate-bounce-slow px-4">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-4 drop-shadow-lg">Ready to Jump?</h2>
+                  <Button size="lg" onClick={startGame} className="shadow-lg hover:shadow-xl transition-shadow text-sm md:text-base">
                     <Play className="w-4 h-4 mr-2" />
                     Start Game
                   </Button>
@@ -645,9 +646,9 @@ const Game = () => {
 
             {gameState === "paused" && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
-                <div className="text-center">
-                  <h2 className="text-3xl font-bold mb-4 drop-shadow-lg">Paused</h2>
-                  <Button size="lg" onClick={() => setGameState("playing")} className="shadow-lg hover:shadow-xl transition-shadow">
+                <div className="text-center px-4">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-4 drop-shadow-lg">Paused</h2>
+                  <Button size="lg" onClick={() => setGameState("playing")} className="shadow-lg hover:shadow-xl transition-shadow text-sm md:text-base">
                     <Play className="w-4 h-4 mr-2" />
                     Resume
                   </Button>
@@ -657,11 +658,11 @@ const Game = () => {
 
             {gameState === "gameover" && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
-                <div className="text-center">
-                  <h2 className="text-3xl font-bold mb-2 drop-shadow-lg text-destructive">Game Over!</h2>
-                  <p className="text-xl mb-2">Final Score: <span className="font-bold text-primary">{score}</span></p>
-                  <p className="text-lg mb-4">Time Survived: <span className="font-bold text-secondary">{formatTime(timeElapsed)}</span></p>
-                  <Button size="lg" onClick={startGame} className="shadow-lg hover:shadow-xl transition-shadow">
+                <div className="text-center px-4">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-2 drop-shadow-lg text-destructive">Game Over!</h2>
+                  <p className="text-base md:text-xl mb-2">Final Score: <span className="font-bold text-primary">{score}</span></p>
+                  <p className="text-sm md:text-lg mb-4">Time Survived: <span className="font-bold text-secondary">{formatTime(timeElapsed)}</span></p>
+                  <Button size="lg" onClick={startGame} className="shadow-lg hover:shadow-xl transition-shadow text-sm md:text-base">
                     <RotateCcw className="w-4 h-4 mr-2" />
                     Play Again
                   </Button>
@@ -670,16 +671,16 @@ const Game = () => {
             )}
           </div>
 
-          <div className="mt-6 flex gap-4 justify-center">
+          <div className="mt-3 md:mt-6 flex gap-4 justify-center">
             {gameState === "playing" && (
-              <Button variant="outline" onClick={() => setGameState("paused")} className="shadow-md hover:shadow-lg transition-shadow border-2">
+              <Button variant="outline" onClick={() => setGameState("paused")} className="shadow-md hover:shadow-lg transition-shadow border-2 text-sm md:text-base">
                 <Pause className="w-4 h-4 mr-2" />
                 Pause
               </Button>
             )}
           </div>
 
-          <div className="mt-6 text-center text-xs md:text-sm text-muted-foreground space-y-1">
+          <div className="mt-3 md:mt-6 text-center text-xs md:text-sm text-muted-foreground space-y-1 px-2">
             <p>🎮 Tap Screen / Press SPACE to jump</p>
             <p>🎵 Collect golden Note Coins for extra lives!</p>
             <p>⚠️ Avoid red spikes! Jump on purple platforms!</p>
