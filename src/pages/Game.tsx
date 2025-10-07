@@ -31,8 +31,10 @@ const Game = () => {
   const { toast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const [gameState, setGameState] = useState<"idle" | "playing" | "paused" | "gameover">("idle");
+  const [canvasScale, setCanvasScale] = useState(1);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [coins, setCoins] = useState(3);
@@ -182,6 +184,21 @@ const Game = () => {
     }
   }, []);
 
+  // Handle canvas scaling for responsive design
+  useEffect(() => {
+    const updateScale = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.offsetWidth;
+        const scale = Math.min(1, containerWidth / GAME_WIDTH);
+        setCanvasScale(scale);
+      }
+    };
+
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, []);
+
   // Keyboard and touch controls
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -191,16 +208,9 @@ const Game = () => {
       }
     };
     
-    const handleTouchStart = (e: TouchEvent) => {
-      e.preventDefault();
-      jump();
-    };
-    
     window.addEventListener("keydown", handleKeyPress);
-    window.addEventListener("touchstart", handleTouchStart, { passive: false });
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
-      window.removeEventListener("touchstart", handleTouchStart);
     };
   }, [jump]);
 
@@ -596,13 +606,29 @@ const Game = () => {
             </div>
           </div>
 
-          <div className="relative bg-gradient-to-b from-accent/5 to-primary/5 rounded-2xl overflow-hidden mx-auto border-4 border-primary/20 shadow-2xl" style={{ maxWidth: "100%", width: GAME_WIDTH, height: GAME_HEIGHT }}>
+          <div 
+            ref={containerRef}
+            className="relative bg-gradient-to-b from-accent/5 to-primary/5 rounded-2xl overflow-hidden mx-auto border-4 border-primary/20 shadow-2xl w-full max-w-full"
+            style={{ 
+              maxWidth: GAME_WIDTH,
+              aspectRatio: `${GAME_WIDTH} / ${GAME_HEIGHT}`
+            }}
+          >
             <canvas
               ref={canvasRef}
               width={GAME_WIDTH}
               height={GAME_HEIGHT}
               onClick={jump}
-              className="cursor-pointer"
+              onTouchStart={(e) => {
+                e.preventDefault();
+                jump();
+              }}
+              className="cursor-pointer w-full h-full touch-none"
+              style={{
+                width: '100%',
+                height: '100%',
+                touchAction: 'none'
+              }}
             />
             
             {gameState === "idle" && (
