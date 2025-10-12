@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Music2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -13,23 +13,49 @@ export const RhythmDemo = () => {
   const [total, setTotal] = useState(0);
   const { toast } = useToast();
   
-  const playNote = useCallback((frequency: number) => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.value = frequency;
-    oscillator.type = 'sine';
-    
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.3);
+  // Audio context ref for better performance
+  const audioContextRef = useRef<AudioContext | null>(null);
+  
+  // Initialize audio context once
+  const getAudioContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      try {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      } catch (e) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Audio not supported');
+        }
+        return null;
+      }
+    }
+    return audioContextRef.current;
   }, []);
+  
+  const playNote = useCallback((frequency: number) => {
+    const audioContext = getAudioContext();
+    if (!audioContext) return;
+    
+    try {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = frequency;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    } catch (e) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Audio not supported');
+      }
+    }
+  }, [getAudioContext]);
 
   const handleNoteClick = useCallback((index: number) => {
     playNote(notes[index]);

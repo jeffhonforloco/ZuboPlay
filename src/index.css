@@ -147,4 +147,50 @@ All colors MUST be HSL.
       box-shadow: 0 0 40px hsl(var(--accent) / 0.8);
     }
   }
+  
+  /* Enhanced animations */
+  .animate-bounce-slow {
+    animation: bounce 2s infinite;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  
+  .animate-wiggle {
+    animation: wiggle 0.5s ease-in-out;
+  }
+  
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-3deg); }
+    75% { transform: rotate(3deg); }
+  }
+  
+  /* Game-specific animations */
+  .game-particle {
+    animation: particle-float 2s ease-out forwards;
+  }
+  
+  @keyframes particle-float {
+    0% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-50px) scale(0.5);
+    }
+  }
+  
+  /* Responsive text scaling */
+  @media (max-width: 640px) {
+    .text-responsive {
+      font-size: clamp(0.875rem, 4vw, 1.125rem);
+    }
+  }
 }

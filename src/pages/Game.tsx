@@ -5,7 +5,8 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Play, Pause, RotateCcw } from "lucide-react";
+import { ArrowLeft, Play, Pause, RotateCcw, Settings } from "lucide-react";
+import SettingsComponent from "@/components/Settings";
 
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 400;
@@ -56,6 +57,8 @@ const Game = () => {
     legType: "springy",
     color: "#FF6B9D"
   });
+
+  const [showSettings, setShowSettings] = useState(false);
 
   // Load user's Zubo design and high score
   useEffect(() => {
@@ -139,33 +142,56 @@ const Game = () => {
       setIsJumping(true);
       
       // Play jump sound (musical note)
-      try {
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.value = 523.25; // C5 note
-        oscillator.type = 'sine';
-        
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.15);
-      } catch (e) {
-        console.log('Audio not supported');
+      const audioContext = getAudioContext();
+      if (audioContext) {
+        try {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.value = 523.25; // C5 note
+          oscillator.type = 'sine';
+          
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+          
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.15);
+        } catch (e) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Audio not supported');
+          }
+        }
       }
     }
-  }, [gameState, isJumping]);
+  }, [gameState, isJumping, getAudioContext]);
+
+  // Audio context ref for better performance
+  const audioContextRef = useRef<AudioContext | null>(null);
+  
+  // Initialize audio context once
+  const getAudioContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      try {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      } catch (e) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Audio not supported');
+        }
+        return null;
+      }
+    }
+    return audioContextRef.current;
+  }, []);
 
   // Play coin collection sound (musical arpeggio)
   const playCoinSound = useCallback(() => {
+    const audioContext = getAudioContext();
+    if (!audioContext) return;
+    
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
       // Play a musical arpeggio (C major chord)
       const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
       
@@ -188,14 +214,18 @@ const Game = () => {
         oscillator.stop(startTime + 0.2);
       });
     } catch (e) {
-      console.log('Audio not supported');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Audio not supported');
+      }
     }
-  }, []);
+  }, [getAudioContext]);
 
   // Play spike hit sound
   const playSpikeSound = useCallback(() => {
+    const audioContext = getAudioContext();
+    if (!audioContext) return;
+    
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
@@ -213,9 +243,11 @@ const Game = () => {
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.2);
     } catch (e) {
-      console.log('Audio not supported');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Audio not supported');
+      }
     }
-  }, []);
+  }, [getAudioContext]);
 
   // Handle canvas scaling for responsive design
   useEffect(() => {
@@ -258,7 +290,7 @@ const Game = () => {
     return () => clearInterval(timerInterval);
   }, [gameState]);
 
-  // Game loop
+  // Game loop - optimized to prevent infinite re-renders
   useEffect(() => {
     if (gameState !== "playing") return;
 
@@ -338,7 +370,7 @@ const Game = () => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [gameState, zuboVelocity, zuboY, obstacles, generateObstacle, playCoinSound, playSpikeSound]);
+  }, [gameState]); // Removed problematic dependencies that caused infinite re-renders
 
   // Draw game
   useEffect(() => {
@@ -606,14 +638,25 @@ const Game = () => {
   return (
     <div className="min-h-screen bg-background py-2 md:py-8 px-2 md:px-6">
       <div className="container mx-auto max-w-4xl">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/")}
-          className="mb-2 md:mb-6 text-sm md:text-base"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Home
-        </Button>
+        <div className="flex justify-between items-center mb-2 md:mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="text-sm md:text-base"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => setShowSettings(true)}
+            className="text-sm md:text-base"
+            aria-label="Open game settings"
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Settings
+          </Button>
+        </div>
 
         <Card className="p-2 md:p-8 bg-gradient-to-br from-card via-card to-primary/5 shadow-xl border-2 md:border-4">
           <div className="text-center mb-2 md:mb-6">
@@ -658,7 +701,16 @@ const Game = () => {
                 e.preventDefault();
                 jump();
               }}
-              className="cursor-pointer w-full h-full touch-none"
+              onKeyDown={(e) => {
+                if (e.code === "Space" || e.code === "Enter") {
+                  e.preventDefault();
+                  jump();
+                }
+              }}
+              tabIndex={0}
+              role="button"
+              aria-label="Game canvas - Press space or click to make Zubo jump"
+              className="cursor-pointer w-full h-full touch-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
               style={{
                 width: '100%',
                 height: '100%',
@@ -721,6 +773,10 @@ const Game = () => {
           </div>
         </Card>
       </div>
+
+      {showSettings && (
+        <SettingsComponent onClose={() => setShowSettings(false)} />
+      )}
     </div>
   );
 };

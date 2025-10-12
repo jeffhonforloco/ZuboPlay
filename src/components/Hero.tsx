@@ -39,12 +39,13 @@ export const Hero = () => {
             </div>
             <div className="flex items-center gap-4 justify-center md:justify-start pt-4">
               <div className="flex -space-x-2">
-                {[...Array(3)].map((_, i) => <div key={i} className="w-12 h-12 rounded-full bg-primary border-4 border-background" style={{
-                zIndex: 3 - i
+                {[...Array(3)].map((_, i) => <div key={i} className="w-12 h-12 rounded-full bg-primary border-4 border-background animate-pulse" style={{
+                zIndex: 3 - i,
+                animationDelay: `${i * 0.2}s`
               }} />)}
               </div>
               <p className="text-sm font-medium text-foreground/70">
-                Join  players creating Zubos
+                Join <span className="font-bold text-primary">1,000+</span> players creating Zubos
               </p>
             </div>
           </div>
