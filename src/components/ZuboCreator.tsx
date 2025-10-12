@@ -89,7 +89,7 @@ export const ZuboCreator = () => {
       ? "rounded-full" 
       : bodyType === "cube" 
       ? "rounded-2xl" 
-      : "rounded-full scale-y-125";
+      : "rounded-full scale-y-150";
     
     const legHeight = legType === "springy" ? "h-20" : "h-10";
     
@@ -283,6 +283,18 @@ export const ZuboCreator = () => {
                     }`}
                   >
                     <div className="text-center">
+                      {/* Visual Preview of Body Type */}
+                      <div className="flex justify-center mb-3">
+                        <div 
+                          className={`w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 ${
+                            type === "sphere" 
+                              ? "rounded-full" 
+                              : type === "cube" 
+                              ? "rounded-2xl" 
+                              : "rounded-full scale-y-150"
+                          }`}
+                        />
+                      </div>
                       <div className="text-lg font-bold capitalize text-gray-800 mb-2">{type}</div>
                       <div className="text-sm text-gray-500">
                         {type === "sphere" && "Balanced and bouncy"}
@@ -320,6 +332,24 @@ export const ZuboCreator = () => {
                     }`}
                   >
                     <div className="text-center">
+                      {/* Visual Preview of Leg Type */}
+                      <div className="flex justify-center mb-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full mb-1" />
+                          <div className="flex gap-1">
+                            <div 
+                              className={`w-2 bg-gradient-to-t from-gray-600 to-gray-400 rounded-full ${
+                                type === "springy" ? "h-8" : "h-4"
+                              }`}
+                            />
+                            <div 
+                              className={`w-2 bg-gradient-to-t from-gray-600 to-gray-400 rounded-full ${
+                                type === "springy" ? "h-8" : "h-4"
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </div>
                       <div className="text-lg font-bold capitalize text-gray-800 mb-2">
                         {type === "springy" ? "Springy Legs" : "Heavy Legs"}
                       </div>
