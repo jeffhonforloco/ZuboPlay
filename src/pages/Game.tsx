@@ -8,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Play, Pause, RotateCcw, Settings } from "lucide-react";
 import SettingsComponent from "@/components/Settings";
 import MobileNavigation from "@/components/MobileNavigation";
+import { SignupPrompt } from "@/components/SignupPrompt";
+import { GuestSystem } from "@/lib/guestSystem";
+import { UserProgression } from "@/lib/userProgression";
 
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 400;
@@ -63,6 +66,11 @@ const Game = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Guest restriction system
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+  const [remainingPlays, setRemainingPlays] = useState(3);
+  const [isGuest, setIsGuest] = useState(!user);
   
   const [gameState, setGameState] = useState<"idle" | "playing" | "paused" | "gameover">("idle");
   const [canvasScale, setCanvasScale] = useState(1);
@@ -334,28 +342,48 @@ const Game = () => {
   }, [generateObstacle]);
 
   // Audio context ref for better performance
-  // Load user's Zubo design and high score
+  // Initialize guest system and load user data
   useEffect(() => {
-    const loadUserData = async () => {
-      if (!user) return;
-      
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("favorite_zubo_design, total_games_played")
-        .eq("id", user.id)
-        .single();
-      
-      if (data?.favorite_zubo_design) {
-        const design = data.favorite_zubo_design as { bodyType: BodyType; legType: LegType; color: string };
-        setZuboDesign(design);
-      }
-      
-      if (data?.total_games_played) {
-        setHighScore(data.total_games_played * 100); // Mock high score
+    const initializeGame = async () => {
+      if (user) {
+        // Load authenticated user data
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("favorite_zubo_design, total_games_played")
+          .eq("id", user.id)
+          .single();
+        
+        if (data?.favorite_zubo_design) {
+          const design = data.favorite_zubo_design as { bodyType: BodyType; legType: LegType; color: string };
+          setZuboDesign(design);
+        }
+        
+        if (data?.total_games_played) {
+          setHighScore(data.total_games_played * 100); // Mock high score
+        }
+
+        // Load user progress
+        const progress = await UserProgression.getUserProgress(user.id);
+        if (progress) {
+          setHighScore(progress.total_score);
+          setCurrentLevel(progress.highest_level);
+        }
+
+        setIsGuest(false);
+      } else {
+        // Initialize guest session
+        const guestSession = GuestSystem.initializeGuestSession();
+        setRemainingPlays(GuestSystem.getRemainingPlays());
+        setIsGuest(true);
+        
+        // Check if should show signup prompt
+        if (GuestSystem.shouldShowSignupPrompt()) {
+          setShowSignupPrompt(true);
+        }
       }
     };
     
-    loadUserData();
+    initializeGame();
   }, [user]);
 
   // Initialize obstacles
@@ -1114,6 +1142,12 @@ const Game = () => {
   }, [obstacles, zuboY, zuboDesign]);
 
   const startGame = () => {
+    // Check guest restrictions
+    if (isGuest && !GuestSystem.canGuestPlay()) {
+      setShowSignupPrompt(true);
+      return;
+    }
+
     setGameState("playing");
     setScore(0);
     setCoins(3);
@@ -1130,6 +1164,12 @@ const Game = () => {
     setCanDestroyObstacles(false);
     setDoubleJumpUsed(false);
     setLastTapTime(0);
+
+    // Increment guest play count if guest
+    if (isGuest) {
+      GuestSystem.incrementPlayCount();
+      setRemainingPlays(GuestSystem.getRemainingPlays());
+    }
   };
   
   const formatTime = (seconds: number): string => {
@@ -1138,9 +1178,65 @@ const Game = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Handle signup prompt
+  const handleSignupPromptClose = () => {
+    setShowSignupPrompt(false);
+  };
+
+  const handleSignupPromptSignup = () => {
+    setShowSignupPrompt(false);
+    navigate("/auth");
+  };
+
+  // Update user progress when game ends
+  const updateUserProgress = async () => {
+    if (user && gameState === "gameover") {
+      try {
+        await UserProgression.updateUserProgress(user.id, {
+          total_score: Math.max(score, highScore),
+          highest_level: Math.max(currentLevel, 1),
+          total_play_time: timeElapsed,
+          coins_collected: totalCoins,
+          power_ups_used: activePowerUps.length
+        });
+
+        // Check for feature unlocks
+        const unlockedFeatures = await UserProgression.checkFeatureUnlocks(user.id);
+        if (unlockedFeatures.length > 0) {
+          toast({
+            title: "New Features Unlocked!",
+            description: `You've unlocked ${unlockedFeatures.length} new feature(s)!`,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to update user progress:", error);
+      }
+    }
+  };
+
+  // Update progress when game ends
+  useEffect(() => {
+    if (gameState === "gameover") {
+      updateUserProgress();
+    }
+  }, [gameState, score, currentLevel, timeElapsed, totalCoins, user]);
+
   return (
     <div className="min-h-screen bg-background py-2 md:py-8 px-2 md:px-6 landscape-mobile">
       <MobileNavigation />
+      
+      {/* Guest Play Counter */}
+      {isGuest && (
+        <div className="fixed top-4 left-4 z-20 bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-lg">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+            <span className="text-sm font-medium text-gray-700">
+              Free plays: {remainingPlays}
+            </span>
+          </div>
+        </div>
+      )}
+      
       <div className="container mx-auto max-w-4xl ultra-wide">
         <div className="flex justify-between items-center mb-2 md:mb-6 gap-2">
           <Button
@@ -1404,6 +1500,14 @@ const Game = () => {
       {showSettings && (
         <SettingsComponent onClose={() => setShowSettings(false)} />
       )}
+
+      {/* Signup Prompt */}
+      <SignupPrompt
+        isOpen={showSignupPrompt}
+        onClose={handleSignupPromptClose}
+        onSignup={handleSignupPromptSignup}
+        remainingPlays={remainingPlays}
+      />
     </div>
   );
 };
