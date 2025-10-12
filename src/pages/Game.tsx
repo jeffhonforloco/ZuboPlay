@@ -79,6 +79,15 @@ const Game = () => {
   const [showAchievement, setShowAchievement] = useState<{id: string, name: string, icon: string} | null>(null);
   const [perfectRun, setPerfectRun] = useState(true);
   
+  // Power progression system
+  const [powerLevel, setPowerLevel] = useState(1);
+  const [powerPoints, setPowerPoints] = useState(0);
+  const [canDoubleJump, setCanDoubleJump] = useState(false);
+  const [canDestroyObstacles, setCanDestroyObstacles] = useState(false);
+  const [doubleJumpUsed, setDoubleJumpUsed] = useState(false);
+  const [lastTapTime, setLastTapTime] = useState(0);
+  const [showPowerUp, setShowPowerUp] = useState(false);
+  
   const [zuboY, setZuboY] = useState(GAME_HEIGHT - ZUBO_SIZE - 50);
   const [zuboVelocity, setZuboVelocity] = useState(0);
   const [isJumping, setIsJumping] = useState(false);
@@ -195,6 +204,34 @@ const Game = () => {
     }
   };
 
+  // Power progression system
+  const updatePowerLevel = (newScore: number) => {
+    const newPowerLevel = Math.floor(newScore / 1000) + 1;
+    if (newPowerLevel > powerLevel) {
+      setPowerLevel(newPowerLevel);
+      setShowPowerUp(true);
+      setTimeout(() => setShowPowerUp(false), 2000);
+    }
+    
+    // Unlock abilities based on power level
+    if (newPowerLevel >= 2 && !canDoubleJump) {
+      setCanDoubleJump(true);
+    }
+    if (newPowerLevel >= 3 && !canDestroyObstacles) {
+      setCanDestroyObstacles(true);
+    }
+  };
+
+  const getPowerMultiplier = () => {
+    return 1 + (powerLevel - 1) * 0.2; // 20% increase per power level
+  };
+
+  const getJumpPower = () => {
+    const levelData = getCurrentLevelData();
+    const powerMultiplier = getPowerMultiplier();
+    return levelData.jumpForce * powerMultiplier;
+  };
+
   // Generate obstacles - moved to top to avoid hoisting issues
   const generateObstacle = useCallback((lastX: number): Obstacle => {
     const levelData = getCurrentLevelData();
@@ -293,13 +330,19 @@ const Game = () => {
     }
   }, [gameState, obstacles.length, generateObstacle]);
 
-  // Jump handler
+  // Enhanced jump handler with double-tap and power progression
   const jump = useCallback(() => {
     if (gameState !== "playing") return;
+    
+    const currentTime = Date.now();
+    const isDoubleTap = currentTime - lastTapTime < 300; // 300ms double-tap window
+    
+    // Regular jump
     if (!isJumpingRef.current) {
-      const levelData = getCurrentLevelData();
-      setZuboVelocity(levelData.jumpForce);
+      const jumpPower = getJumpPower();
+      setZuboVelocity(jumpPower);
       setIsJumping(true);
+      setDoubleJumpUsed(false);
       
       // Check for first jump achievement
       if (!achievements.includes("first_jump")) {
@@ -307,8 +350,43 @@ const Game = () => {
         setShowAchievement({ id: "first_jump", name: "First Jump", icon: "🦘" });
         setTimeout(() => setShowAchievement(null), 3000);
       }
+    }
+    // Double jump (if available and not used)
+    else if (canDoubleJump && !doubleJumpUsed && isDoubleTap) {
+      const jumpPower = getJumpPower() * 0.8; // Slightly weaker double jump
+      setZuboVelocity(jumpPower);
+      setDoubleJumpUsed(true);
       
-      // Play jump sound (musical note)
+      // Play double jump sound
+      const audioContext = getAudioContext();
+      if (audioContext) {
+        try {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.value = 659.25; // E5 note for double jump
+          oscillator.type = 'sine';
+          
+          gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+          
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.2);
+        } catch (e) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Audio not supported');
+          }
+        }
+      }
+    }
+    
+    setLastTapTime(currentTime);
+    
+    // Play jump sound (musical note) for regular jump
+    if (!isDoubleTap || !canDoubleJump || doubleJumpUsed) {
       const audioContext = getAudioContext();
       if (audioContext) {
         try {
@@ -333,7 +411,7 @@ const Game = () => {
         }
       }
     }
-  }, [gameState, getAudioContext]);
+  }, [gameState, getAudioContext, canDoubleJump, doubleJumpUsed, lastTapTime]);
 
   // Play coin collection sound (musical arpeggio)
   const playCoinSound = useCallback(() => {
@@ -506,6 +584,7 @@ const Game = () => {
       setScore(prev => {
         const newScore = prev + Math.floor(levelData.speed * 0.5);
         checkLevelUp(newScore);
+        updatePowerLevel(newScore);
         checkAchievements(newScore, totalCoins, timeElapsed);
         return newScore;
       });
@@ -524,17 +603,54 @@ const Game = () => {
 
         if (collision) {
           if (obs.type === "spike") {
-            setPerfectRun(false); // Reset perfect run on spike hit
-            playSpikeSound();
-            setCoins(prev => {
-              const newCoins = prev - 1;
-              if (newCoins <= 0) {
-                setGameState("gameover");
-                saveScore();
+            // Check if Zubo can destroy obstacles
+            if (canDestroyObstacles && currentZuboY < obs.y - 20) {
+              // Zubo is above the spike, destroy it
+              setObstacles(prev => prev.filter(o => o !== obs));
+              setScore(prev => {
+                const newScore = prev + 100; // Bonus for destroying obstacle
+                updatePowerLevel(newScore);
+                return newScore;
+              });
+              
+              // Play destruction sound
+              const audioContext = getAudioContext();
+              if (audioContext) {
+                try {
+                  const oscillator = audioContext.createOscillator();
+                  const gainNode = audioContext.createGain();
+                  
+                  oscillator.connect(gainNode);
+                  gainNode.connect(audioContext.destination);
+                  
+                  oscillator.frequency.value = 800; // Higher pitch for destruction
+                  oscillator.type = 'sawtooth';
+                  
+                  gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                  
+                  oscillator.start(audioContext.currentTime);
+                  oscillator.stop(audioContext.currentTime + 0.1);
+                } catch (e) {
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('Audio not supported');
+                  }
+                }
               }
-              return newCoins;
-            });
-            setObstacles(prev => prev.filter(o => o !== obs));
+            } else {
+              // Normal spike collision
+              setPerfectRun(false); // Reset perfect run on spike hit
+              playSpikeSound();
+              setCoins(prev => {
+                const newCoins = prev - 1;
+                if (newCoins <= 0) {
+                  setGameState("gameover");
+                  saveScore();
+                }
+                return newCoins;
+              });
+              setObstacles(prev => prev.filter(o => o !== obs));
+            }
           } else if (obs.type === "coin") {
             setCoins(prev => prev + 1);
             setTotalCoins(prev => prev + 1);
@@ -795,6 +911,12 @@ const Game = () => {
     setScrollOffset(0);
     setCurrentLevel(1);
     setPerfectRun(true);
+    setPowerLevel(1);
+    setPowerPoints(0);
+    setCanDoubleJump(false);
+    setCanDestroyObstacles(false);
+    setDoubleJumpUsed(false);
+    setLastTapTime(0);
   };
   
   const formatTime = (seconds: number): string => {
@@ -891,6 +1013,42 @@ const Game = () => {
                 {getNextLevelData()!.requiredScore - score} points to {getNextLevelData()!.name}
               </div>
             )}
+          </div>
+
+          {/* Power Progression Display */}
+          <div className="mb-4 p-3 bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-xl border-2 border-orange-200/30">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-sm">
+                  ⚡
+                </div>
+                <div>
+                  <div className="font-bold text-sm">Power Level {powerLevel}</div>
+                  <div className="text-xs text-muted-foreground">Jump Power: {Math.round(getPowerMultiplier() * 100)}%</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-bold text-orange-600">{powerPoints} ⚡</div>
+                <div className="text-xs text-muted-foreground">Power Points</div>
+              </div>
+            </div>
+            
+            {/* Abilities Display */}
+            <div className="flex gap-2 justify-center">
+              {canDoubleJump && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 rounded-full text-xs">
+                  <span>🦘</span>
+                  <span>Double Jump</span>
+                  {!doubleJumpUsed && <span className="text-green-500">●</span>}
+                </div>
+              )}
+              {canDestroyObstacles && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-red-500/20 rounded-full text-xs">
+                  <span>💥</span>
+                  <span>Destroy</span>
+                </div>
+              )}
+            </div>
           </div>
 
           <div 
@@ -993,6 +1151,19 @@ const Game = () => {
                 </div>
               </div>
             )}
+
+            {/* Power Up Notification */}
+            {showPowerUp && (
+              <div className="absolute top-28 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-full shadow-lg animate-bounce">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">⚡</span>
+                  <div>
+                    <div className="font-bold">Power Up!</div>
+                    <div className="text-sm">Power Level {powerLevel} - Jump Higher!</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-3 md:mt-6 flex gap-4 justify-center">
@@ -1006,9 +1177,12 @@ const Game = () => {
 
           <div className="mt-3 md:mt-6 text-center text-xs md:text-sm text-muted-foreground space-y-1 px-2">
             <p>🎮 Tap Screen / Press SPACE to jump</p>
+            <p>🦘 Double-tap for double jump (unlock at Power Level 2)</p>
+            <p>💥 Destroy spikes by jumping above them (unlock at Power Level 3)</p>
             <p>🎵 Collect golden Note Coins for extra lives!</p>
             <p>⚠️ Avoid red spikes! Jump on purple platforms!</p>
             <p>🏆 Level up by scoring points! Higher levels = harder challenges!</p>
+            <p>⚡ Gain power as you score! Higher power = stronger jumps!</p>
             <p>⭐ Unlock achievements and collect rewards!</p>
           </div>
         </Card>

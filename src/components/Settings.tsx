@@ -14,6 +14,15 @@ export const Settings = ({ onClose }: SettingsProps) => {
   const [musicEnabled, setMusicEnabled] = useState(true);
   const [soundVolume, setSoundVolume] = useState([70]);
   const [musicVolume, setMusicVolume] = useState([50]);
+  
+  // Enhanced settings
+  const [doubleTapEnabled, setDoubleTapEnabled] = useState(true);
+  const [powerModeEnabled, setPowerModeEnabled] = useState(true);
+  const [obstacleDestruction, setObstacleDestruction] = useState(true);
+  const [autoJump, setAutoJump] = useState(false);
+  const [difficulty, setDifficulty] = useState("normal");
+  const [visualEffects, setVisualEffects] = useState(true);
+  const [particleEffects, setParticleEffects] = useState(true);
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -100,28 +109,90 @@ export const Settings = ({ onClose }: SettingsProps) => {
             )}
           </div>
 
-          {/* Game Settings */}
+          {/* Enhanced Game Settings */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Game Settings</h3>
+            <h3 className="text-lg font-semibold">Game Controls</h3>
             
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Show FPS Counter</span>
+                <span className="text-sm">Double-Tap Jump</span>
                 <Switch
-                  checked={false}
-                  onCheckedChange={() => {}}
-                  aria-label="Toggle FPS counter"
+                  checked={doubleTapEnabled}
+                  onCheckedChange={setDoubleTapEnabled}
+                  aria-label="Toggle double-tap jump"
                 />
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-sm">High Performance Mode</span>
+                <span className="text-sm">Power Progression</span>
                 <Switch
-                  checked={true}
-                  onCheckedChange={() => {}}
-                  aria-label="Toggle high performance mode"
+                  checked={powerModeEnabled}
+                  onCheckedChange={setPowerModeEnabled}
+                  aria-label="Toggle power progression"
                 />
               </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Obstacle Destruction</span>
+                <Switch
+                  checked={obstacleDestruction}
+                  onCheckedChange={setObstacleDestruction}
+                  aria-label="Toggle obstacle destruction"
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Auto Jump (Easy Mode)</span>
+                <Switch
+                  checked={autoJump}
+                  onCheckedChange={setAutoJump}
+                  aria-label="Toggle auto jump"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Visual Settings */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Visual Effects</h3>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Visual Effects</span>
+                <Switch
+                  checked={visualEffects}
+                  onCheckedChange={setVisualEffects}
+                  aria-label="Toggle visual effects"
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Particle Effects</span>
+                <Switch
+                  checked={particleEffects}
+                  onCheckedChange={setParticleEffects}
+                  aria-label="Toggle particle effects"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Difficulty Settings */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Difficulty</h3>
+            
+            <div className="space-y-2">
+              <label className="text-sm text-muted-foreground">Game Difficulty</label>
+              <select 
+                value={difficulty} 
+                onChange={(e) => setDifficulty(e.target.value)}
+                className="w-full p-2 border rounded-md bg-background"
+              >
+                <option value="easy">Easy</option>
+                <option value="normal">Normal</option>
+                <option value="hard">Hard</option>
+                <option value="expert">Expert</option>
+              </select>
             </div>
           </div>
         </div>
