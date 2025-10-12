@@ -97,54 +97,54 @@ export const ZuboCreator = () => {
     console.log("Current color:", color);
 
     return (
-      <div key={`${bodyType}-${legType}-${color}`} className="flex flex-col items-center justify-end h-80 relative">
+      <div key={`${bodyType}-${legType}-${color}`} className="flex flex-col items-center justify-end h-64 relative">
         {/* Premium Background Glow */}
         <div className="absolute inset-0 bg-gradient-to-t from-purple-500/20 to-pink-500/20 rounded-3xl blur-2xl scale-150" />
         
         {/* Body with Premium Effects */}
         <div 
-          className={`relative w-40 h-40 ${bodyClass} shadow-[0_20px_60px_rgba(0,0,0,0.3)] transition-all duration-500 animate-bounce-slow border-4 border-white/20`}
+          className={`relative w-32 h-32 ${bodyClass} shadow-[0_20px_60px_rgba(0,0,0,0.3)] transition-all duration-500 animate-bounce-slow border-4 border-white/20`}
           style={{ 
             backgroundColor: color,
             boxShadow: `0 20px 60px ${color}40, inset 0 2px 4px rgba(255,255,255,0.3)`
           }}
         >
           {/* Premium Eyes with Glow */}
-          <div className="flex gap-6 justify-center pt-12">
-            <div className="relative w-8 h-8 bg-white rounded-full shadow-lg">
+          <div className="flex gap-4 justify-center pt-8">
+            <div className="relative w-6 h-6 bg-white rounded-full shadow-lg">
               <div className="absolute inset-1 bg-black rounded-full" />
-              <div className="absolute top-1 left-1 w-3 h-3 bg-white rounded-full animate-pulse" />
+              <div className="absolute top-1 left-1 w-2 h-2 bg-white rounded-full animate-pulse" />
               <div className="absolute inset-0 bg-white/30 rounded-full blur-sm" />
             </div>
-            <div className="relative w-8 h-8 bg-white rounded-full shadow-lg">
+            <div className="relative w-6 h-6 bg-white rounded-full shadow-lg">
               <div className="absolute inset-1 bg-black rounded-full" />
-              <div className="absolute top-1 left-1 w-3 h-3 bg-white rounded-full animate-pulse" />
+              <div className="absolute top-1 left-1 w-2 h-2 bg-white rounded-full animate-pulse" />
               <div className="absolute inset-0 bg-white/30 rounded-full blur-sm" />
             </div>
           </div>
           
           {/* Premium Mouth */}
-          <div className="w-12 h-6 bg-white rounded-full mx-auto mt-4 shadow-inner relative">
+          <div className="w-8 h-4 bg-white rounded-full mx-auto mt-3 shadow-inner relative">
             <div className="absolute inset-1 bg-black/20 rounded-full" />
           </div>
           
           {/* Floating Particles */}
-          <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-2 h-2 bg-yellow-400 rounded-full animate-bounce" />
-          <div className="absolute -top-2 -right-2 w-1.5 h-1.5 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-yellow-400 rounded-full animate-bounce" />
+          <div className="absolute -top-1 -right-1 w-1 h-1 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }} />
         </div>
         
         {/* Premium Legs */}
-        <div className="flex gap-6 -mt-4">
+        <div className="flex gap-4 -mt-2">
           <div 
-            className={`w-8 ${legHeight} bg-gradient-to-t from-gray-700 to-gray-500 rounded-full transition-all duration-500 shadow-lg border-2 border-white/20`}
+            className={`w-6 ${legHeight} bg-gradient-to-t from-gray-700 to-gray-500 rounded-full transition-all duration-500 shadow-lg border-2 border-white/20`}
           />
           <div 
-            className={`w-8 ${legHeight} bg-gradient-to-t from-gray-700 to-gray-500 rounded-full transition-all duration-500 shadow-lg border-2 border-white/20`}
+            className={`w-6 ${legHeight} bg-gradient-to-t from-gray-700 to-gray-500 rounded-full transition-all duration-500 shadow-lg border-2 border-white/20`}
           />
         </div>
         
         {/* Ground Shadow */}
-        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-32 h-8 bg-black/20 rounded-full blur-lg" />
+        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-24 h-6 bg-black/20 rounded-full blur-lg" />
       </div>
     );
   };
@@ -193,6 +193,46 @@ export const ZuboCreator = () => {
               </div>
               
               {renderZuboPreview()}
+              
+              {/* Integrated Color Picker */}
+              <div className="mt-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-6 h-6 bg-gradient-to-r from-pink-500 to-red-500 rounded-lg flex items-center justify-center">
+                    <Sparkles className="w-3 h-3 text-white" />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-800">Choose Color</h4>
+                </div>
+                <div className="grid grid-cols-6 gap-2">
+                  {bodyColors.map((c) => (
+                    <button
+                      key={c.value}
+                      onClick={() => {
+                        console.log("Color clicked:", c.name, c.value);
+                        setColor(c.value);
+                      }}
+                      className={`group relative w-full aspect-square rounded-xl border-2 transition-all duration-300 touch-target mobile-bounce ${
+                        color === c.value
+                          ? "border-gray-800 scale-110 shadow-lg"
+                          : "border-gray-200 hover:scale-105 hover:shadow-md"
+                      }`}
+                      style={{ 
+                        backgroundColor: c.value,
+                        boxShadow: color === c.value ? `0 4px 15px ${c.value}40` : undefined
+                      }}
+                      title={c.name}
+                      aria-label={`Select ${c.name} color`}
+                    >
+                      {color === c.value && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-4 h-4 bg-white/90 rounded-full flex items-center justify-center">
+                            <Check className="w-3 h-3 text-gray-800" />
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
               
               {/* Premium Action Buttons */}
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
@@ -297,48 +337,6 @@ export const ZuboCreator = () => {
               </div>
             </Card>
 
-            {/* Color Picker */}
-            <Card className="p-6 md:p-8 bg-white/80 backdrop-blur-sm border-0 shadow-[0_15px_35px_rgba(0,0,0,0.08)] rounded-2xl">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-red-500 rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
-                </div>
-                <h4 className="text-xl md:text-2xl font-bold text-gray-800">Color</h4>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                {bodyColors.map((c) => (
-                  <button
-                    key={c.value}
-                    onClick={() => {
-                      console.log("Color clicked:", c.name, c.value);
-                      setColor(c.value);
-                    }}
-                    className={`group relative w-full aspect-square rounded-2xl border-4 transition-all duration-300 touch-target mobile-bounce ${
-                      color === c.value
-                        ? "border-gray-800 scale-110 shadow-lg"
-                        : "border-gray-200 hover:scale-105 hover:shadow-md"
-                    }`}
-                    style={{ 
-                      backgroundColor: c.value,
-                      boxShadow: color === c.value ? `0 10px 30px ${c.value}40` : undefined
-                    }}
-                    title={c.name}
-                    aria-label={`Select ${c.name} color`}
-                  >
-                    {color === c.value && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center">
-                          <Check className="w-5 h-5 text-gray-800" />
-                        </div>
-                      </div>
-                    )}
-                    <div className="absolute bottom-2 left-2 right-2 text-center">
-                      <div className="text-xs font-bold text-white drop-shadow-lg">{c.name}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </Card>
           </div>
         </div>
       </div>
