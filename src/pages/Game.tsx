@@ -12,22 +12,22 @@ import MobileNavigation from "@/components/MobileNavigation";
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 400;
 const ZUBO_SIZE = 60;
-const GRAVITY = 0.8;
-const JUMP_FORCE = -15;
+const GRAVITY = 0.6; // Reduced gravity for more realistic physics
+const JUMP_FORCE = -12; // Reduced jump force for more realistic height
 const GAME_SPEED = 5;
 
-// Level system constants
+// Level system constants with more realistic physics
 const LEVELS = [
-  { level: 1, name: "Beginner", requiredScore: 0, speed: 5, gravity: 0.8, jumpForce: -15, obstacleGap: 200, color: "#4CAF50" },
-  { level: 2, name: "Novice", requiredScore: 500, speed: 6, gravity: 0.9, jumpForce: -16, obstacleGap: 180, color: "#2196F3" },
-  { level: 3, name: "Skilled", requiredScore: 1000, speed: 7, gravity: 1.0, jumpForce: -17, obstacleGap: 160, color: "#FF9800" },
-  { level: 4, name: "Expert", requiredScore: 2000, speed: 8, gravity: 1.1, jumpForce: -18, obstacleGap: 140, color: "#9C27B0" },
-  { level: 5, name: "Master", requiredScore: 3500, speed: 9, gravity: 1.2, jumpForce: -19, obstacleGap: 120, color: "#F44336" },
-  { level: 6, name: "Legend", requiredScore: 5000, speed: 10, gravity: 1.3, jumpForce: -20, obstacleGap: 100, color: "#FFD700" },
-  { level: 7, name: "Champion", requiredScore: 7500, speed: 11, gravity: 1.4, jumpForce: -21, obstacleGap: 80, color: "#E91E63" },
-  { level: 8, name: "Grandmaster", requiredScore: 10000, speed: 12, gravity: 1.5, jumpForce: -22, obstacleGap: 60, color: "#00BCD4" },
-  { level: 9, name: "Supreme", requiredScore: 15000, speed: 13, gravity: 1.6, jumpForce: -23, obstacleGap: 40, color: "#795548" },
-  { level: 10, name: "Ultimate", requiredScore: 25000, speed: 15, gravity: 1.8, jumpForce: -25, obstacleGap: 30, color: "#607D8B" }
+  { level: 1, name: "Beginner", requiredScore: 0, speed: 5, gravity: 0.6, jumpForce: -12, obstacleGap: 200, color: "#4CAF50" },
+  { level: 2, name: "Novice", requiredScore: 500, speed: 6, gravity: 0.7, jumpForce: -13, obstacleGap: 180, color: "#2196F3" },
+  { level: 3, name: "Skilled", requiredScore: 1000, speed: 7, gravity: 0.8, jumpForce: -14, obstacleGap: 160, color: "#FF9800" },
+  { level: 4, name: "Expert", requiredScore: 2000, speed: 8, gravity: 0.9, jumpForce: -15, obstacleGap: 140, color: "#9C27B0" },
+  { level: 5, name: "Master", requiredScore: 3500, speed: 9, gravity: 1.0, jumpForce: -16, obstacleGap: 120, color: "#F44336" },
+  { level: 6, name: "Legend", requiredScore: 5000, speed: 10, gravity: 1.1, jumpForce: -17, obstacleGap: 100, color: "#FFD700" },
+  { level: 7, name: "Champion", requiredScore: 7500, speed: 11, gravity: 1.2, jumpForce: -18, obstacleGap: 80, color: "#E91E63" },
+  { level: 8, name: "Grandmaster", requiredScore: 10000, speed: 12, gravity: 1.3, jumpForce: -19, obstacleGap: 60, color: "#00BCD4" },
+  { level: 9, name: "Supreme", requiredScore: 15000, speed: 13, gravity: 1.4, jumpForce: -20, obstacleGap: 40, color: "#795548" },
+  { level: 10, name: "Ultimate", requiredScore: 25000, speed: 15, gravity: 1.5, jumpForce: -21, obstacleGap: 30, color: "#607D8B" }
 ];
 
 // Achievement system
@@ -223,7 +223,7 @@ const Game = () => {
   };
 
   const getPowerMultiplier = () => {
-    return 1 + (powerLevel - 1) * 0.2; // 20% increase per power level
+    return 1 + (powerLevel - 1) * 0.1; // 10% increase per power level for more realistic scaling
   };
 
   const getJumpPower = () => {
@@ -353,7 +353,7 @@ const Game = () => {
     }
     // Double jump (if available and not used)
     else if (canDoubleJump && !doubleJumpUsed && isDoubleTap) {
-      const jumpPower = getJumpPower() * 0.8; // Slightly weaker double jump
+      const jumpPower = getJumpPower() * 0.6; // More realistic double jump (60% of regular jump)
       setZuboVelocity(jumpPower);
       setDoubleJumpUsed(true);
       
@@ -555,6 +555,7 @@ const Game = () => {
         
         if (newY >= groundY) {
           setIsJumping(false);
+          setDoubleJumpUsed(false); // Reset double jump when landing
           return groundY;
         }
         return newY;
