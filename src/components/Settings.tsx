@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -24,9 +24,27 @@ export const Settings = ({ onClose }: SettingsProps) => {
   const [visualEffects, setVisualEffects] = useState(true);
   const [particleEffects, setParticleEffects] = useState(true);
 
+  // Handle escape key to close settings
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md p-6 bg-background border-2 shadow-xl">
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <Card 
+        className="w-full max-w-md p-6 bg-background border-2 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <SettingsIcon className="w-5 h-5 text-primary" />
@@ -36,9 +54,10 @@ export const Settings = ({ onClose }: SettingsProps) => {
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground hover:bg-destructive/10 rounded-full w-8 h-8 p-0"
+            aria-label="Close settings"
           >
-            ✕
+            <span className="text-lg">✕</span>
           </Button>
         </div>
 
