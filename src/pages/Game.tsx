@@ -12,22 +12,22 @@ import MobileNavigation from "@/components/MobileNavigation";
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 400;
 const ZUBO_SIZE = 60;
-const GRAVITY = 0.6; // Reduced gravity for more realistic physics
-const JUMP_FORCE = -12; // Reduced jump force for more realistic height
+const GRAVITY = 0.8; // Increased gravity for more realistic physics
+const JUMP_FORCE = -8; // Much more realistic jump force
 const GAME_SPEED = 5;
 
-// Level system constants with more realistic physics
+// Level system constants with realistic physics and scoring
 const LEVELS = [
-  { level: 1, name: "Beginner", requiredScore: 0, speed: 5, gravity: 0.6, jumpForce: -12, obstacleGap: 200, color: "#4CAF50" },
-  { level: 2, name: "Novice", requiredScore: 500, speed: 6, gravity: 0.7, jumpForce: -13, obstacleGap: 180, color: "#2196F3" },
-  { level: 3, name: "Skilled", requiredScore: 1000, speed: 7, gravity: 0.8, jumpForce: -14, obstacleGap: 160, color: "#FF9800" },
-  { level: 4, name: "Expert", requiredScore: 2000, speed: 8, gravity: 0.9, jumpForce: -15, obstacleGap: 140, color: "#9C27B0" },
-  { level: 5, name: "Master", requiredScore: 3500, speed: 9, gravity: 1.0, jumpForce: -16, obstacleGap: 120, color: "#F44336" },
-  { level: 6, name: "Legend", requiredScore: 5000, speed: 10, gravity: 1.1, jumpForce: -17, obstacleGap: 100, color: "#FFD700" },
-  { level: 7, name: "Champion", requiredScore: 7500, speed: 11, gravity: 1.2, jumpForce: -18, obstacleGap: 80, color: "#E91E63" },
-  { level: 8, name: "Grandmaster", requiredScore: 10000, speed: 12, gravity: 1.3, jumpForce: -19, obstacleGap: 60, color: "#00BCD4" },
-  { level: 9, name: "Supreme", requiredScore: 15000, speed: 13, gravity: 1.4, jumpForce: -20, obstacleGap: 40, color: "#795548" },
-  { level: 10, name: "Ultimate", requiredScore: 25000, speed: 15, gravity: 1.5, jumpForce: -21, obstacleGap: 30, color: "#607D8B" }
+  { level: 1, name: "Beginner", requiredScore: 0, speed: 5, gravity: 0.8, jumpForce: -8, obstacleGap: 200, color: "#4CAF50" },
+  { level: 2, name: "Novice", requiredScore: 100, speed: 6, gravity: 0.9, jumpForce: -9, obstacleGap: 180, color: "#2196F3" },
+  { level: 3, name: "Skilled", requiredScore: 250, speed: 7, gravity: 1.0, jumpForce: -10, obstacleGap: 160, color: "#FF9800" },
+  { level: 4, name: "Expert", requiredScore: 500, speed: 8, gravity: 1.1, jumpForce: -11, obstacleGap: 140, color: "#9C27B0" },
+  { level: 5, name: "Master", requiredScore: 750, speed: 9, gravity: 1.2, jumpForce: -12, obstacleGap: 120, color: "#F44336" },
+  { level: 6, name: "Legend", requiredScore: 1000, speed: 10, gravity: 1.3, jumpForce: -13, obstacleGap: 100, color: "#FFD700" },
+  { level: 7, name: "Champion", requiredScore: 1500, speed: 11, gravity: 1.4, jumpForce: -14, obstacleGap: 80, color: "#E91E63" },
+  { level: 8, name: "Grandmaster", requiredScore: 2000, speed: 12, gravity: 1.5, jumpForce: -15, obstacleGap: 60, color: "#00BCD4" },
+  { level: 9, name: "Supreme", requiredScore: 3000, speed: 13, gravity: 1.6, jumpForce: -16, obstacleGap: 40, color: "#795548" },
+  { level: 10, name: "Ultimate", requiredScore: 5000, speed: 15, gravity: 1.8, jumpForce: -18, obstacleGap: 30, color: "#607D8B" }
 ];
 
 // Achievement system
@@ -580,10 +580,10 @@ const Game = () => {
         return filtered;
       });
 
-      // Update scroll and score with level-based scoring
+      // Update scroll and score with realistic scoring
       setScrollOffset(prev => prev + levelData.speed);
       setScore(prev => {
-        const newScore = prev + Math.floor(levelData.speed * 0.5);
+        const newScore = prev + 1; // Much more realistic scoring - 1 point per frame
         checkLevelUp(newScore);
         updatePowerLevel(newScore);
         checkAchievements(newScore, totalCoins, timeElapsed);
@@ -609,7 +609,7 @@ const Game = () => {
               // Zubo is above the spike, destroy it
               setObstacles(prev => prev.filter(o => o !== obs));
               setScore(prev => {
-                const newScore = prev + 100; // Bonus for destroying obstacle
+                const newScore = prev + 25; // More realistic destruction bonus
                 updatePowerLevel(newScore);
                 return newScore;
               });
@@ -656,7 +656,7 @@ const Game = () => {
             setCoins(prev => prev + 1);
             setTotalCoins(prev => prev + 1);
             setScore(prev => {
-              const newScore = prev + 50;
+              const newScore = prev + 10; // More realistic coin value
               checkLevelUp(newScore);
               checkAchievements(newScore, totalCoins + 1, timeElapsed);
               return newScore;
@@ -784,98 +784,235 @@ const Game = () => {
       }
     });
 
-    // Draw Zubo with cartoon style
+    // Draw Zubo with enhanced 3D cartoon style
     const zuboX = 100;
     
-    // Shadow
-    ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+    // Enhanced shadow with 3D effect
+    const shadowGradient = ctx.createRadialGradient(
+      zuboX + ZUBO_SIZE / 2, GAME_HEIGHT - 45, 0,
+      zuboX + ZUBO_SIZE / 2, GAME_HEIGHT - 45, ZUBO_SIZE / 2 + 10
+    );
+    shadowGradient.addColorStop(0, "rgba(0, 0, 0, 0.3)");
+    shadowGradient.addColorStop(0.7, "rgba(0, 0, 0, 0.1)");
+    shadowGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+    
+    ctx.fillStyle = shadowGradient;
     ctx.beginPath();
-    ctx.ellipse(zuboX + ZUBO_SIZE / 2, GAME_HEIGHT - 45, ZUBO_SIZE / 2, 8, 0, 0, Math.PI * 2);
+    ctx.ellipse(zuboX + ZUBO_SIZE / 2, GAME_HEIGHT - 45, ZUBO_SIZE / 2 + 5, 12, 0, 0, Math.PI * 2);
     ctx.fill();
     
-    // Zubo body
+    // Zubo body with enhanced 3D effects
     if (zuboDesign.bodyType === "sphere") {
-      // Gradient for sphere
+      // Enhanced 3D sphere gradient
       const bodyGradient = ctx.createRadialGradient(
-        zuboX + ZUBO_SIZE / 2 - 10, zuboY + ZUBO_SIZE / 2 - 10, 5,
+        zuboX + ZUBO_SIZE / 2 - 15, zuboY + ZUBO_SIZE / 2 - 15, 0,
         zuboX + ZUBO_SIZE / 2, zuboY + ZUBO_SIZE / 2, ZUBO_SIZE / 2
       );
-      bodyGradient.addColorStop(0, lightenColor(zuboDesign.color, 30));
-      bodyGradient.addColorStop(1, zuboDesign.color);
+      bodyGradient.addColorStop(0, lightenColor(zuboDesign.color, 40));
+      bodyGradient.addColorStop(0.3, lightenColor(zuboDesign.color, 20));
+      bodyGradient.addColorStop(0.7, zuboDesign.color);
+      bodyGradient.addColorStop(1, darkenColor(zuboDesign.color, 20));
       
       ctx.fillStyle = bodyGradient;
       ctx.beginPath();
       ctx.arc(zuboX + ZUBO_SIZE / 2, zuboY + ZUBO_SIZE / 2, ZUBO_SIZE / 2, 0, Math.PI * 2);
       ctx.fill();
       
-      // Outline
-      ctx.strokeStyle = darkenColor(zuboDesign.color, 30);
-      ctx.lineWidth = 3;
+      // Enhanced 3D outline with multiple strokes
+      ctx.strokeStyle = darkenColor(zuboDesign.color, 40);
+      ctx.lineWidth = 4;
       ctx.stroke();
+      
+      ctx.strokeStyle = darkenColor(zuboDesign.color, 20);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // 3D highlight
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.beginPath();
+      ctx.arc(zuboX + ZUBO_SIZE / 2 - 8, zuboY + ZUBO_SIZE / 2 - 8, ZUBO_SIZE / 4, 0, Math.PI * 2);
+      ctx.fill();
     } else if (zuboDesign.bodyType === "cube") {
-      // Gradient for cube
+      // Enhanced 3D cube with multiple faces
+      // Main face
       const bodyGradient = ctx.createLinearGradient(zuboX, zuboY, zuboX, zuboY + ZUBO_SIZE);
-      bodyGradient.addColorStop(0, lightenColor(zuboDesign.color, 20));
-      bodyGradient.addColorStop(1, zuboDesign.color);
+      bodyGradient.addColorStop(0, lightenColor(zuboDesign.color, 30));
+      bodyGradient.addColorStop(0.5, zuboDesign.color);
+      bodyGradient.addColorStop(1, darkenColor(zuboDesign.color, 20));
       
       ctx.fillStyle = bodyGradient;
       ctx.fillRect(zuboX, zuboY, ZUBO_SIZE, ZUBO_SIZE);
       
-      // Outline
-      ctx.strokeStyle = darkenColor(zuboDesign.color, 30);
+      // 3D top face
+      ctx.fillStyle = lightenColor(zuboDesign.color, 40);
+      ctx.beginPath();
+      ctx.moveTo(zuboX, zuboY);
+      ctx.lineTo(zuboX + 10, zuboY - 10);
+      ctx.lineTo(zuboX + ZUBO_SIZE + 10, zuboY - 10);
+      ctx.lineTo(zuboX + ZUBO_SIZE, zuboY);
+      ctx.closePath();
+      ctx.fill();
+      
+      // 3D right face
+      ctx.fillStyle = darkenColor(zuboDesign.color, 30);
+      ctx.beginPath();
+      ctx.moveTo(zuboX + ZUBO_SIZE, zuboY);
+      ctx.lineTo(zuboX + ZUBO_SIZE + 10, zuboY - 10);
+      ctx.lineTo(zuboX + ZUBO_SIZE + 10, zuboY + ZUBO_SIZE - 10);
+      ctx.lineTo(zuboX + ZUBO_SIZE, zuboY + ZUBO_SIZE);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Enhanced outline
+      ctx.strokeStyle = darkenColor(zuboDesign.color, 50);
       ctx.lineWidth = 3;
       ctx.strokeRect(zuboX, zuboY, ZUBO_SIZE, ZUBO_SIZE);
     } else {
-      // Tube
+      // Enhanced 3D tube
       const bodyGradient = ctx.createLinearGradient(zuboX + 10, zuboY, zuboX + 10, zuboY + ZUBO_SIZE);
-      bodyGradient.addColorStop(0, lightenColor(zuboDesign.color, 20));
-      bodyGradient.addColorStop(1, zuboDesign.color);
+      bodyGradient.addColorStop(0, lightenColor(zuboDesign.color, 30));
+      bodyGradient.addColorStop(0.3, zuboDesign.color);
+      bodyGradient.addColorStop(0.7, zuboDesign.color);
+      bodyGradient.addColorStop(1, darkenColor(zuboDesign.color, 20));
       
       ctx.fillStyle = bodyGradient;
       ctx.fillRect(zuboX + 10, zuboY, ZUBO_SIZE - 20, ZUBO_SIZE);
       
-      // Outline
-      ctx.strokeStyle = darkenColor(zuboDesign.color, 30);
+      // 3D tube highlight
+      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.fillRect(zuboX + 12, zuboY + 2, ZUBO_SIZE - 24, ZUBO_SIZE / 3);
+      
+      // 3D tube shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      ctx.fillRect(zuboX + 10, zuboY + ZUBO_SIZE - 5, ZUBO_SIZE - 20, 5);
+      
+      // Enhanced outline
+      ctx.strokeStyle = darkenColor(zuboDesign.color, 40);
       ctx.lineWidth = 3;
       ctx.strokeRect(zuboX + 10, zuboY, ZUBO_SIZE - 20, ZUBO_SIZE);
     }
 
-    // Draw eyes
-    ctx.fillStyle = "#FFFFFF";
+    // Draw enhanced 3D eyes
+    // Left eye
+    const leftEyeGradient = ctx.createRadialGradient(
+      zuboX + ZUBO_SIZE / 2 - 10, zuboY + ZUBO_SIZE / 2 - 5, 0,
+      zuboX + ZUBO_SIZE / 2 - 10, zuboY + ZUBO_SIZE / 2 - 5, 6
+    );
+    leftEyeGradient.addColorStop(0, "#FFFFFF");
+    leftEyeGradient.addColorStop(0.7, "#F0F0F0");
+    leftEyeGradient.addColorStop(1, "#E0E0E0");
+    
+    ctx.fillStyle = leftEyeGradient;
     ctx.beginPath();
     ctx.arc(zuboX + ZUBO_SIZE / 2 - 10, zuboY + ZUBO_SIZE / 2 - 5, 6, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Right eye
+    const rightEyeGradient = ctx.createRadialGradient(
+      zuboX + ZUBO_SIZE / 2 + 10, zuboY + ZUBO_SIZE / 2 - 5, 0,
+      zuboX + ZUBO_SIZE / 2 + 10, zuboY + ZUBO_SIZE / 2 - 5, 6
+    );
+    rightEyeGradient.addColorStop(0, "#FFFFFF");
+    rightEyeGradient.addColorStop(0.7, "#F0F0F0");
+    rightEyeGradient.addColorStop(1, "#E0E0E0");
+    
+    ctx.fillStyle = rightEyeGradient;
+    ctx.beginPath();
     ctx.arc(zuboX + ZUBO_SIZE / 2 + 10, zuboY + ZUBO_SIZE / 2 - 5, 6, 0, Math.PI * 2);
     ctx.fill();
     
+    // Eye pupils with 3D effect
     ctx.fillStyle = "#000000";
     ctx.beginPath();
     ctx.arc(zuboX + ZUBO_SIZE / 2 - 10, zuboY + ZUBO_SIZE / 2 - 5, 3, 0, Math.PI * 2);
     ctx.arc(zuboX + ZUBO_SIZE / 2 + 10, zuboY + ZUBO_SIZE / 2 - 5, 3, 0, Math.PI * 2);
     ctx.fill();
     
-    // Draw smile
+    // Eye highlights
+    ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+    ctx.beginPath();
+    ctx.arc(zuboX + ZUBO_SIZE / 2 - 8, zuboY + ZUBO_SIZE / 2 - 7, 1.5, 0, Math.PI * 2);
+    ctx.arc(zuboX + ZUBO_SIZE / 2 + 12, zuboY + ZUBO_SIZE / 2 - 7, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Enhanced 3D smile
     ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(zuboX + ZUBO_SIZE / 2, zuboY + ZUBO_SIZE / 2 + 5, 12, 0, Math.PI);
     ctx.stroke();
+    
+    // Smile highlight
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(zuboX + ZUBO_SIZE / 2, zuboY + ZUBO_SIZE / 2 + 3, 12, 0, Math.PI);
+    ctx.stroke();
 
-    // Draw legs with outline
+    // Draw enhanced 3D legs
     if (zuboDesign.legType === "springy") {
-      ctx.fillStyle = zuboDesign.color;
+      // Left springy leg with 3D effect
+      const leftLegGradient = ctx.createLinearGradient(
+        zuboX + 10, zuboY + ZUBO_SIZE, 
+        zuboX + 10, zuboY + ZUBO_SIZE + 15
+      );
+      leftLegGradient.addColorStop(0, lightenColor(zuboDesign.color, 20));
+      leftLegGradient.addColorStop(1, darkenColor(zuboDesign.color, 20));
+      
+      ctx.fillStyle = leftLegGradient;
       ctx.fillRect(zuboX + 10, zuboY + ZUBO_SIZE, 10, 15);
+      
+      // Right springy leg with 3D effect
+      const rightLegGradient = ctx.createLinearGradient(
+        zuboX + ZUBO_SIZE - 20, zuboY + ZUBO_SIZE, 
+        zuboX + ZUBO_SIZE - 20, zuboY + ZUBO_SIZE + 15
+      );
+      rightLegGradient.addColorStop(0, lightenColor(zuboDesign.color, 20));
+      rightLegGradient.addColorStop(1, darkenColor(zuboDesign.color, 20));
+      
+      ctx.fillStyle = rightLegGradient;
       ctx.fillRect(zuboX + ZUBO_SIZE - 20, zuboY + ZUBO_SIZE, 10, 15);
       
-      ctx.strokeStyle = darkenColor(zuboDesign.color, 30);
+      // 3D leg highlights
+      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.fillRect(zuboX + 11, zuboY + ZUBO_SIZE, 8, 3);
+      ctx.fillRect(zuboX + ZUBO_SIZE - 19, zuboY + ZUBO_SIZE, 8, 3);
+      
+      // Enhanced outlines
+      ctx.strokeStyle = darkenColor(zuboDesign.color, 40);
       ctx.lineWidth = 2;
       ctx.strokeRect(zuboX + 10, zuboY + ZUBO_SIZE, 10, 15);
       ctx.strokeRect(zuboX + ZUBO_SIZE - 20, zuboY + ZUBO_SIZE, 10, 15);
     } else {
-      ctx.fillStyle = zuboDesign.color;
+      // Left normal leg with 3D effect
+      const leftLegGradient = ctx.createLinearGradient(
+        zuboX + 15, zuboY + ZUBO_SIZE, 
+        zuboX + 15, zuboY + ZUBO_SIZE + 8
+      );
+      leftLegGradient.addColorStop(0, lightenColor(zuboDesign.color, 20));
+      leftLegGradient.addColorStop(1, darkenColor(zuboDesign.color, 20));
+      
+      ctx.fillStyle = leftLegGradient;
       ctx.fillRect(zuboX + 15, zuboY + ZUBO_SIZE, 8, 8);
+      
+      // Right normal leg with 3D effect
+      const rightLegGradient = ctx.createLinearGradient(
+        zuboX + ZUBO_SIZE - 23, zuboY + ZUBO_SIZE, 
+        zuboX + ZUBO_SIZE - 23, zuboY + ZUBO_SIZE + 8
+      );
+      rightLegGradient.addColorStop(0, lightenColor(zuboDesign.color, 20));
+      rightLegGradient.addColorStop(1, darkenColor(zuboDesign.color, 20));
+      
+      ctx.fillStyle = rightLegGradient;
       ctx.fillRect(zuboX + ZUBO_SIZE - 23, zuboY + ZUBO_SIZE, 8, 8);
       
-      ctx.strokeStyle = darkenColor(zuboDesign.color, 30);
+      // 3D leg highlights
+      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.fillRect(zuboX + 16, zuboY + ZUBO_SIZE, 6, 2);
+      ctx.fillRect(zuboX + ZUBO_SIZE - 22, zuboY + ZUBO_SIZE, 6, 2);
+      
+      // Enhanced outlines
+      ctx.strokeStyle = darkenColor(zuboDesign.color, 40);
       ctx.lineWidth = 2;
       ctx.strokeRect(zuboX + 15, zuboY + ZUBO_SIZE, 8, 8);
       ctx.strokeRect(zuboX + ZUBO_SIZE - 23, zuboY + ZUBO_SIZE, 8, 8);
