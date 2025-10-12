@@ -148,6 +148,134 @@ All colors MUST be HSL.
     }
   }
   
+  /* Premium Animations */
+  .animate-premium-glow {
+    animation: premiumGlow 3s ease-in-out infinite alternate;
+  }
+  
+  .animate-premium-float {
+    animation: premiumFloat 4s ease-in-out infinite;
+  }
+  
+  .animate-premium-bounce {
+    animation: premiumBounce 2s ease-in-out infinite;
+  }
+  
+  .animate-premium-pulse {
+    animation: premiumPulse 2s ease-in-out infinite;
+  }
+  
+  .animate-premium-shake {
+    animation: premiumShake 0.6s ease-in-out;
+  }
+  
+  .animate-premium-scale {
+    animation: premiumScale 0.4s ease-out;
+  }
+  
+  .animate-premium-rotate {
+    animation: premiumRotate 8s linear infinite;
+  }
+  
+  .animate-premium-slide {
+    animation: premiumSlide 0.5s ease-out;
+  }
+  
+  .animate-premium-fade {
+    animation: premiumFade 0.6s ease-in-out;
+  }
+  
+  @keyframes premiumGlow {
+    0% {
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.2);
+    }
+    100% {
+      box-shadow: 0 0 40px rgba(168, 85, 247, 0.8), 0 0 80px rgba(168, 85, 247, 0.4);
+    }
+  }
+  
+  @keyframes premiumFloat {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    25% {
+      transform: translateY(-10px) rotate(1deg);
+    }
+    50% {
+      transform: translateY(-20px) rotate(0deg);
+    }
+    75% {
+      transform: translateY(-10px) rotate(-1deg);
+    }
+  }
+  
+  @keyframes premiumBounce {
+    0%, 100% {
+      transform: translateY(0px) scale(1);
+    }
+    50% {
+      transform: translateY(-15px) scale(1.05);
+    }
+  }
+  
+  @keyframes premiumPulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.1);
+      opacity: 0.8;
+    }
+  }
+  
+  @keyframes premiumShake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+    20%, 40%, 60%, 80% { transform: translateX(2px); }
+  }
+  
+  @keyframes premiumScale {
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes premiumRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  @keyframes premiumSlide {
+    0% {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes premiumFade {
+    0% {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
   /* Enhanced animations */
   .animate-bounce-slow {
     animation: bounce 2s infinite;
