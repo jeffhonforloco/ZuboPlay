@@ -53,6 +53,7 @@ const Game = () => {
   const zuboYRef = useRef(GAME_HEIGHT - ZUBO_SIZE - 50);
   const obstaclesRef = useRef<Obstacle[]>([]);
   const isJumpingRef = useRef(false);
+  const generateObstacleRef = useRef<(lastX: number) => Obstacle>();
   
   // Update refs when state changes
   useEffect(() => {
@@ -66,6 +67,10 @@ const Game = () => {
   useEffect(() => {
     isJumpingRef.current = isJumping;
   }, [isJumping]);
+  
+  useEffect(() => {
+    generateObstacleRef.current = generateObstacle;
+  }, [generateObstacle]);
   
   const [zuboDesign, setZuboDesign] = useState<{
     bodyType: BodyType;
@@ -338,7 +343,9 @@ const Game = () => {
         const filtered = updated.filter(obs => obs.x > -100);
         if (filtered.length < 5) {
           const lastObs = filtered[filtered.length - 1];
-          filtered.push(generateObstacle(lastObs ? lastObs.x : GAME_WIDTH));
+          if (generateObstacleRef.current) {
+            filtered.push(generateObstacleRef.current(lastObs ? lastObs.x : GAME_WIDTH));
+          }
         }
 
         return filtered;
@@ -390,7 +397,7 @@ const Game = () => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [gameState, generateObstacle, playSpikeSound, playCoinSound, saveScore]); // Fixed dependencies
+  }, [gameState, playSpikeSound, playCoinSound, saveScore]); // Removed generateObstacle to avoid circular dependency
 
   // Draw game
   useEffect(() => {
