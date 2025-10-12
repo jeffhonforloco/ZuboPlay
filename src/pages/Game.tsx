@@ -808,10 +808,22 @@ const Game = () => {
   // Draw game
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      console.log("Canvas not found");
+      return;
+    }
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      console.log("Canvas context not found");
+      return;
+    }
+
+    console.log("Drawing game state:", gameState, "obstacles:", obstacles.length, "zuboY:", zuboY);
+
+    // Test canvas with a simple rectangle to ensure it's working
+    ctx.fillStyle = "#FF0000";
+    ctx.fillRect(10, 10, 50, 50);
 
     // Apply screen shake effect
     const shakeX = screenShake > 0 ? (Math.random() - 0.5) * screenShake : 0;
@@ -1432,7 +1444,9 @@ const Game = () => {
               style={{
                 width: '100%',
                 height: '100%',
-                touchAction: 'none'
+                touchAction: 'none',
+                backgroundColor: '#87CEEB',
+                display: 'block'
               }}
             />
             
