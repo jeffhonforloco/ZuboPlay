@@ -16,6 +16,35 @@ const GRAVITY = 0.8;
 const JUMP_FORCE = -15;
 const GAME_SPEED = 5;
 
+// Level system constants
+const LEVELS = [
+  { level: 1, name: "Beginner", requiredScore: 0, speed: 5, gravity: 0.8, jumpForce: -15, obstacleGap: 200, color: "#4CAF50" },
+  { level: 2, name: "Novice", requiredScore: 500, speed: 6, gravity: 0.9, jumpForce: -16, obstacleGap: 180, color: "#2196F3" },
+  { level: 3, name: "Skilled", requiredScore: 1000, speed: 7, gravity: 1.0, jumpForce: -17, obstacleGap: 160, color: "#FF9800" },
+  { level: 4, name: "Expert", requiredScore: 2000, speed: 8, gravity: 1.1, jumpForce: -18, obstacleGap: 140, color: "#9C27B0" },
+  { level: 5, name: "Master", requiredScore: 3500, speed: 9, gravity: 1.2, jumpForce: -19, obstacleGap: 120, color: "#F44336" },
+  { level: 6, name: "Legend", requiredScore: 5000, speed: 10, gravity: 1.3, jumpForce: -20, obstacleGap: 100, color: "#FFD700" },
+  { level: 7, name: "Champion", requiredScore: 7500, speed: 11, gravity: 1.4, jumpForce: -21, obstacleGap: 80, color: "#E91E63" },
+  { level: 8, name: "Grandmaster", requiredScore: 10000, speed: 12, gravity: 1.5, jumpForce: -22, obstacleGap: 60, color: "#00BCD4" },
+  { level: 9, name: "Supreme", requiredScore: 15000, speed: 13, gravity: 1.6, jumpForce: -23, obstacleGap: 40, color: "#795548" },
+  { level: 10, name: "Ultimate", requiredScore: 25000, speed: 15, gravity: 1.8, jumpForce: -25, obstacleGap: 30, color: "#607D8B" }
+];
+
+// Achievement system
+const ACHIEVEMENTS = [
+  { id: "first_jump", name: "First Jump", description: "Make your first jump!", icon: "🦘", points: 10 },
+  { id: "level_2", name: "Rising Star", description: "Reach Level 2", icon: "⭐", points: 50 },
+  { id: "level_5", name: "Master Player", description: "Reach Level 5", icon: "👑", points: 200 },
+  { id: "level_10", name: "Ultimate Champion", description: "Reach Level 10", icon: "🏆", points: 500 },
+  { id: "score_1000", name: "Thousand Points", description: "Score 1000 points", icon: "💯", points: 100 },
+  { id: "score_5000", name: "High Scorer", description: "Score 5000 points", icon: "🎯", points: 300 },
+  { id: "score_10000", name: "Point Master", description: "Score 10000 points", icon: "🔥", points: 500 },
+  { id: "survive_60", name: "Survivor", description: "Survive for 60 seconds", icon: "⏰", points: 150 },
+  { id: "survive_120", name: "Endurance", description: "Survive for 2 minutes", icon: "💪", points: 300 },
+  { id: "coins_50", name: "Coin Collector", description: "Collect 50 coins", icon: "🪙", points: 200 },
+  { id: "perfect_run", name: "Perfect Run", description: "Complete a level without losing a life", icon: "✨", points: 250 }
+];
+
 type Obstacle = {
   x: number;
   y: number;
@@ -41,6 +70,14 @@ const Game = () => {
   const [highScore, setHighScore] = useState(0);
   const [coins, setCoins] = useState(3);
   const [timeElapsed, setTimeElapsed] = useState(0);
+  
+  // Level and progression system
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [totalCoins, setTotalCoins] = useState(0);
+  const [achievements, setAchievements] = useState<string[]>([]);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [showAchievement, setShowAchievement] = useState<{id: string, name: string, icon: string} | null>(null);
+  const [perfectRun, setPerfectRun] = useState(true);
   
   const [zuboY, setZuboY] = useState(GAME_HEIGHT - ZUBO_SIZE - 50);
   const [zuboVelocity, setZuboVelocity] = useState(0);
@@ -85,9 +122,83 @@ const Game = () => {
 
   const [showSettings, setShowSettings] = useState(false);
 
+  // Helper functions for level and achievement system
+  const getCurrentLevelData = () => {
+    return LEVELS.find(l => l.level === currentLevel) || LEVELS[0];
+  };
+
+  const getNextLevelData = () => {
+    return LEVELS.find(l => l.level === currentLevel + 1);
+  };
+
+  const checkLevelUp = (newScore: number) => {
+    const nextLevel = LEVELS.find(l => l.level > currentLevel && newScore >= l.requiredScore);
+    if (nextLevel) {
+      setCurrentLevel(nextLevel.level);
+      setShowLevelUp(true);
+      setTimeout(() => setShowLevelUp(false), 3000);
+      return true;
+    }
+    return false;
+  };
+
+  const checkAchievements = (newScore: number, newCoins: number, newTime: number) => {
+    const newAchievements: string[] = [];
+    
+    // Level achievements
+    if (currentLevel >= 2 && !achievements.includes("level_2")) {
+      newAchievements.push("level_2");
+    }
+    if (currentLevel >= 5 && !achievements.includes("level_5")) {
+      newAchievements.push("level_5");
+    }
+    if (currentLevel >= 10 && !achievements.includes("level_10")) {
+      newAchievements.push("level_10");
+    }
+    
+    // Score achievements
+    if (newScore >= 1000 && !achievements.includes("score_1000")) {
+      newAchievements.push("score_1000");
+    }
+    if (newScore >= 5000 && !achievements.includes("score_5000")) {
+      newAchievements.push("score_5000");
+    }
+    if (newScore >= 10000 && !achievements.includes("score_10000")) {
+      newAchievements.push("score_10000");
+    }
+    
+    // Time achievements
+    if (newTime >= 60 && !achievements.includes("survive_60")) {
+      newAchievements.push("survive_60");
+    }
+    if (newTime >= 120 && !achievements.includes("survive_120")) {
+      newAchievements.push("survive_120");
+    }
+    
+    // Coin achievements
+    if (newCoins >= 50 && !achievements.includes("coins_50")) {
+      newAchievements.push("coins_50");
+    }
+    
+    // Perfect run achievement
+    if (perfectRun && newScore >= getCurrentLevelData().requiredScore && !achievements.includes("perfect_run")) {
+      newAchievements.push("perfect_run");
+    }
+    
+    if (newAchievements.length > 0) {
+      setAchievements(prev => [...prev, ...newAchievements]);
+      const achievement = ACHIEVEMENTS.find(a => a.id === newAchievements[0]);
+      if (achievement) {
+        setShowAchievement({ id: achievement.id, name: achievement.name, icon: achievement.icon });
+        setTimeout(() => setShowAchievement(null), 3000);
+      }
+    }
+  };
+
   // Generate obstacles - moved to top to avoid hoisting issues
   const generateObstacle = useCallback((lastX: number): Obstacle => {
-    const gap = 200 + Math.random() * 200;
+    const levelData = getCurrentLevelData();
+    const gap = levelData.obstacleGap + Math.random() * (levelData.obstacleGap * 0.5);
     const x = lastX + gap;
     const rand = Math.random();
     
@@ -186,8 +297,16 @@ const Game = () => {
   const jump = useCallback(() => {
     if (gameState !== "playing") return;
     if (!isJumpingRef.current) {
-      setZuboVelocity(JUMP_FORCE);
+      const levelData = getCurrentLevelData();
+      setZuboVelocity(levelData.jumpForce);
       setIsJumping(true);
+      
+      // Check for first jump achievement
+      if (!achievements.includes("first_jump")) {
+        setAchievements(prev => [...prev, "first_jump"]);
+        setShowAchievement({ id: "first_jump", name: "First Jump", icon: "🦘" });
+        setTimeout(() => setShowAchievement(null), 3000);
+      }
       
       // Play jump sound (musical note)
       const audioContext = getAudioContext();
@@ -348,8 +467,10 @@ const Game = () => {
     if (gameState !== "playing") return;
 
     const gameLoop = () => {
-      // Update Zubo position
-      setZuboVelocity(prev => prev + GRAVITY);
+      const levelData = getCurrentLevelData();
+      
+      // Update Zubo position with level-based physics
+      setZuboVelocity(prev => prev + levelData.gravity);
       setZuboY(prev => {
         const newY = prev + zuboVelocityRef.current;
         const groundY = GAME_HEIGHT - ZUBO_SIZE - 50;
@@ -361,11 +482,11 @@ const Game = () => {
         return newY;
       });
 
-      // Update obstacles
+      // Update obstacles with level-based speed
       setObstacles(prev => {
         const updated = prev.map(obs => ({
           ...obs,
-          x: obs.x - GAME_SPEED
+          x: obs.x - levelData.speed
         }));
 
         // Remove off-screen obstacles and add new ones
@@ -380,9 +501,14 @@ const Game = () => {
         return filtered;
       });
 
-      // Update scroll and score
-      setScrollOffset(prev => prev + GAME_SPEED);
-      setScore(prev => prev + 1);
+      // Update scroll and score with level-based scoring
+      setScrollOffset(prev => prev + levelData.speed);
+      setScore(prev => {
+        const newScore = prev + Math.floor(levelData.speed * 0.5);
+        checkLevelUp(newScore);
+        checkAchievements(newScore, totalCoins, timeElapsed);
+        return newScore;
+      });
 
       // Check collisions using refs to avoid stale closures
       const zuboX = 100;
@@ -398,6 +524,7 @@ const Game = () => {
 
         if (collision) {
           if (obs.type === "spike") {
+            setPerfectRun(false); // Reset perfect run on spike hit
             playSpikeSound();
             setCoins(prev => {
               const newCoins = prev - 1;
@@ -410,7 +537,13 @@ const Game = () => {
             setObstacles(prev => prev.filter(o => o !== obs));
           } else if (obs.type === "coin") {
             setCoins(prev => prev + 1);
-            setScore(prev => prev + 50);
+            setTotalCoins(prev => prev + 1);
+            setScore(prev => {
+              const newScore = prev + 50;
+              checkLevelUp(newScore);
+              checkAchievements(newScore, totalCoins + 1, timeElapsed);
+              return newScore;
+            });
             playCoinSound();
             setObstacles(prev => prev.filter(o => o !== obs));
           }
@@ -660,6 +793,8 @@ const Game = () => {
     setZuboVelocity(0);
     setObstacles([]);
     setScrollOffset(0);
+    setCurrentLevel(1);
+    setPerfectRun(true);
   };
   
   const formatTime = (seconds: number): string => {
@@ -717,6 +852,45 @@ const Game = () => {
               <div className="text-lg md:text-2xl font-bold">{"🎵".repeat(Math.max(0, coins))}</div>
               <div className="text-xs text-muted-foreground">Lives</div>
             </div>
+          </div>
+
+          {/* Level and Progress Display */}
+          <div className="mb-4 p-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl border-2 border-purple-200/30">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm" 
+                     style={{ backgroundColor: getCurrentLevelData().color }}>
+                  {currentLevel}
+                </div>
+                <div>
+                  <div className="font-bold text-sm">{getCurrentLevelData().name}</div>
+                  <div className="text-xs text-muted-foreground">Level {currentLevel}</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-bold text-purple-600">{totalCoins} 🪙</div>
+                <div className="text-xs text-muted-foreground">Total Coins</div>
+              </div>
+            </div>
+            
+            {/* Progress to next level */}
+            {getNextLevelData() && (
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                <div 
+                  className="h-2 rounded-full transition-all duration-300" 
+                  style={{ 
+                    backgroundColor: getNextLevelData()?.color,
+                    width: `${Math.min(100, (score / getNextLevelData()!.requiredScore) * 100)}%`
+                  }}
+                ></div>
+              </div>
+            )}
+            
+            {getNextLevelData() && (
+              <div className="text-xs text-center text-muted-foreground">
+                {getNextLevelData()!.requiredScore - score} points to {getNextLevelData()!.name}
+              </div>
+            )}
           </div>
 
           <div 
@@ -783,11 +957,39 @@ const Game = () => {
                 <div className="text-center px-4">
                   <h2 className="text-2xl md:text-3xl font-bold mb-2 drop-shadow-lg text-destructive">Game Over!</h2>
                   <p className="text-base md:text-xl mb-2">Final Score: <span className="font-bold text-primary">{score}</span></p>
+                  <p className="text-sm md:text-lg mb-2">Level Reached: <span className="font-bold" style={{ color: getCurrentLevelData().color }}>{getCurrentLevelData().name}</span></p>
+                  <p className="text-sm md:text-lg mb-2">Coins Collected: <span className="font-bold text-yellow-600">{totalCoins}</span></p>
                   <p className="text-sm md:text-lg mb-4">Time Survived: <span className="font-bold text-secondary">{formatTime(timeElapsed)}</span></p>
                   <Button size="lg" onClick={startGame} className="shadow-lg hover:shadow-xl transition-shadow text-sm md:text-base">
                     <RotateCcw className="w-4 h-4 mr-2" />
                     Play Again
                   </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Level Up Notification */}
+            {showLevelUp && (
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-full shadow-lg animate-bounce">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🎉</span>
+                  <div>
+                    <div className="font-bold">Level Up!</div>
+                    <div className="text-sm">Welcome to {getCurrentLevelData().name}!</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Achievement Notification */}
+            {showAchievement && (
+              <div className="absolute top-16 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-full shadow-lg animate-pulse">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{showAchievement.icon}</span>
+                  <div>
+                    <div className="font-bold">Achievement Unlocked!</div>
+                    <div className="text-sm">{showAchievement.name}</div>
+                  </div>
                 </div>
               </div>
             )}
@@ -806,6 +1008,8 @@ const Game = () => {
             <p>🎮 Tap Screen / Press SPACE to jump</p>
             <p>🎵 Collect golden Note Coins for extra lives!</p>
             <p>⚠️ Avoid red spikes! Jump on purple platforms!</p>
+            <p>🏆 Level up by scoring points! Higher levels = harder challenges!</p>
+            <p>⭐ Unlock achievements and collect rewards!</p>
           </div>
         </Card>
       </div>
