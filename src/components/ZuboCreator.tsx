@@ -89,7 +89,7 @@ export const ZuboCreator = () => {
       ? "rounded-full" 
       : bodyType === "cube" 
       ? "rounded-2xl" 
-      : "rounded-full scale-y-150";
+      : "rounded-none scale-y-200";
     
     const legHeight = legType === "springy" ? "h-20" : "h-10";
     
@@ -103,10 +103,15 @@ export const ZuboCreator = () => {
         
         {/* Body with Premium Effects */}
         <div 
-          className={`relative w-32 h-32 ${bodyClass} shadow-[0_20px_60px_rgba(0,0,0,0.3)] transition-all duration-500 animate-bounce-slow border-4 border-white/20`}
+          className={`relative w-32 h-32 ${bodyClass} shadow-[0_20px_60px_rgba(0,0,0,0.3)] transition-all duration-500 animate-bounce-slow border-4 border-white/20 ${
+            bodyType === "tube" ? "transform-gpu" : ""
+          }`}
           style={{ 
             backgroundColor: color,
-            boxShadow: `0 20px 60px ${color}40, inset 0 2px 4px rgba(255,255,255,0.3)`
+            boxShadow: `0 20px 60px ${color}40, inset 0 2px 4px rgba(255,255,255,0.3)`,
+            ...(bodyType === "tube" && {
+              clipPath: "polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)"
+            })
           }}
         >
           {/* Premium Eyes with Glow */}
@@ -291,8 +296,13 @@ export const ZuboCreator = () => {
                               ? "rounded-full" 
                               : type === "cube" 
                               ? "rounded-2xl" 
-                              : "rounded-full scale-y-150"
+                              : "rounded-none scale-y-200"
                           }`}
+                          style={{
+                            ...(type === "tube" && {
+                              clipPath: "polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)"
+                            })
+                          }}
                         />
                       </div>
                       <div className="text-lg font-bold capitalize text-gray-800 mb-2">{type}</div>
