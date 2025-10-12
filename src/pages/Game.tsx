@@ -805,7 +805,28 @@ const Game = () => {
     };
   }, [gameState, playSpikeSound, playCoinSound, saveScore]); // Removed generateObstacle to avoid circular dependency
 
-  // Draw game
+  // Test canvas immediately on mount
+  useEffect(() => {
+    console.log("Component mounted, testing canvas...");
+    const canvas = canvasRef.current;
+    if (canvas) {
+      console.log("Canvas found:", canvas.width, "x", canvas.height);
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        console.log("Canvas context found");
+        // Draw a test rectangle
+        ctx.fillStyle = "#FF0000";
+        ctx.fillRect(0, 0, 100, 100);
+        console.log("Test rectangle drawn");
+      } else {
+        console.log("Canvas context NOT found");
+      }
+    } else {
+      console.log("Canvas NOT found");
+    }
+  }, []);
+
+  // Draw game - ALWAYS draw regardless of game state
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) {
@@ -821,9 +842,24 @@ const Game = () => {
 
     console.log("Drawing game state:", gameState, "obstacles:", obstacles.length, "zuboY:", zuboY);
 
+    // ALWAYS clear and draw - don't let game state prevent drawing
+    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    
     // Test canvas with a simple rectangle to ensure it's working
     ctx.fillStyle = "#FF0000";
     ctx.fillRect(10, 10, 50, 50);
+    
+    // Draw a simple background that should always be visible
+    ctx.fillStyle = "#87CEEB";
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    
+    // Draw a simple ground
+    ctx.fillStyle = "#8BC34A";
+    ctx.fillRect(0, GAME_HEIGHT - 50, GAME_WIDTH, 50);
+    
+    // Draw a simple Zubo character
+    ctx.fillStyle = "#FF6B9D";
+    ctx.fillRect(100, zuboY, ZUBO_SIZE, ZUBO_SIZE);
 
     // Apply screen shake effect
     const shakeX = screenShake > 0 ? (Math.random() - 0.5) * screenShake : 0;
@@ -1260,7 +1296,7 @@ const Game = () => {
     
     // Restore canvas state after screen shake
     ctx.restore();
-  }, [obstacles, zuboY, zuboDesign, screenShake]);
+  }, [obstacles, zuboY, zuboDesign, screenShake, gameState, particles]);
 
   const startGame = () => {
     setGameState("playing");
