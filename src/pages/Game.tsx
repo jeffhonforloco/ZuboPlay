@@ -53,6 +53,7 @@ const Game = () => {
   const zuboYRef = useRef(GAME_HEIGHT - ZUBO_SIZE - 50);
   const obstaclesRef = useRef<Obstacle[]>([]);
   const isJumpingRef = useRef(false);
+  const zuboVelocityRef = useRef(0);
   const generateObstacleRef = useRef<(lastX: number) => Obstacle>();
   
   // Update refs when state changes
@@ -69,8 +70,8 @@ const Game = () => {
   }, [isJumping]);
   
   useEffect(() => {
-    generateObstacleRef.current = generateObstacle;
-  }, [generateObstacle]);
+    zuboVelocityRef.current = zuboVelocity;
+  }, [zuboVelocity]);
   
   const [zuboDesign, setZuboDesign] = useState<{
     bodyType: BodyType;
@@ -84,25 +85,7 @@ const Game = () => {
 
   const [showSettings, setShowSettings] = useState(false);
 
-  // Audio context ref for better performance - moved to top to avoid hoisting issues
-  const audioContextRef = useRef<AudioContext | null>(null);
-  
-  // Initialize audio context once
-  const getAudioContext = useCallback(() => {
-    if (!audioContextRef.current) {
-      try {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      } catch (e) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Audio not supported');
-        }
-        return null;
-      }
-    }
-    return audioContextRef.current;
-  }, []);
-
-  // Generate obstacles - moved before other functions to avoid hoisting issues
+  // Generate obstacles - moved to top to avoid hoisting issues
   const generateObstacle = useCallback((lastX: number): Obstacle => {
     const gap = 200 + Math.random() * 200;
     const x = lastX + gap;
@@ -136,6 +119,29 @@ const Game = () => {
         type: "platform"
       };
     }
+  }, []);
+
+  // Update generateObstacle ref when function changes
+  useEffect(() => {
+    generateObstacleRef.current = generateObstacle;
+  }, [generateObstacle]);
+
+  // Audio context ref for better performance
+  const audioContextRef = useRef<AudioContext | null>(null);
+  
+  // Initialize audio context once
+  const getAudioContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      try {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      } catch (e) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Audio not supported');
+        }
+        return null;
+      }
+    }
+    return audioContextRef.current;
   }, []);
 
   // Load user's Zubo design and high score
@@ -314,6 +320,29 @@ const Game = () => {
     return () => clearInterval(timerInterval);
   }, [gameState]);
 
+  const saveScore = async () => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ total_games_played: Math.floor(score / 100) })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      if (score > highScore) {
+        setHighScore(score);
+        toast({
+          title: "New High Score!",
+          description: `You scored ${score} points!`,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving score:", error);
+    }
+  };
+
   // Game loop - optimized to prevent infinite re-renders
   useEffect(() => {
     if (gameState !== "playing") return;
@@ -322,7 +351,7 @@ const Game = () => {
       // Update Zubo position
       setZuboVelocity(prev => prev + GRAVITY);
       setZuboY(prev => {
-        const newY = prev + zuboVelocity;
+        const newY = prev + zuboVelocityRef.current;
         const groundY = GAME_HEIGHT - ZUBO_SIZE - 50;
         
         if (newY >= groundY) {
@@ -621,29 +650,6 @@ const Game = () => {
       return "#" + (0x1000000 + (R>0?R:0)*0x10000 + (G>0?G:0)*0x100 + (B>0?B:0)).toString(16).slice(1);
     }
   }, [obstacles, zuboY, zuboDesign]);
-
-  const saveScore = async () => {
-    if (!user) return;
-    
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ total_games_played: Math.floor(score / 100) })
-        .eq("id", user.id);
-
-      if (error) throw error;
-
-      if (score > highScore) {
-        setHighScore(score);
-        toast({
-          title: "New High Score!",
-          description: `You scored ${score} points!`,
-        });
-      }
-    } catch (error) {
-      console.error("Error saving score:", error);
-    }
-  };
 
   const startGame = () => {
     setGameState("playing");
