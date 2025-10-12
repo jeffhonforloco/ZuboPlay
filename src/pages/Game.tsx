@@ -963,7 +963,12 @@ const Game = () => {
         // Highlight on top
         ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
         ctx.fillRect(obs.x + 2, obs.y + 2, obs.width - 4, obs.height / 3);
-      } else if (obs.type === "shield") {
+      }
+    });
+
+    // Draw power-ups
+    obstacles.forEach(obs => {
+      if (obs.type === "shield") {
         // Shield power-up
         ctx.fillStyle = "#4CAF50";
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
@@ -997,6 +1002,7 @@ const Game = () => {
         ctx.textAlign = "center";
         ctx.fillText("🧲", obs.x + obs.width / 2, obs.y + obs.height / 2 + 5);
       }
+    });
 
     // Draw Zubo with enhanced 3D cartoon style
     const zuboX = 100;
