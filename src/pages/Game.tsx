@@ -12,22 +12,22 @@ import MobileNavigation from "@/components/MobileNavigation";
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 400;
 const ZUBO_SIZE = 60;
-const GRAVITY = 0.8; // Increased gravity for more realistic physics
-const JUMP_FORCE = -8; // Much more realistic jump force
+const GRAVITY = 0.7; // Balanced gravity for responsive gameplay
+const JUMP_FORCE = -12; // Responsive jump force for fun gameplay
 const GAME_SPEED = 5;
 
-// Level system constants with realistic physics and scoring
+// Professional level system for app stores
 const LEVELS = [
-  { level: 1, name: "Beginner", requiredScore: 0, speed: 5, gravity: 0.8, jumpForce: -8, obstacleGap: 200, color: "#4CAF50" },
-  { level: 2, name: "Novice", requiredScore: 100, speed: 6, gravity: 0.9, jumpForce: -9, obstacleGap: 180, color: "#2196F3" },
-  { level: 3, name: "Skilled", requiredScore: 250, speed: 7, gravity: 1.0, jumpForce: -10, obstacleGap: 160, color: "#FF9800" },
-  { level: 4, name: "Expert", requiredScore: 500, speed: 8, gravity: 1.1, jumpForce: -11, obstacleGap: 140, color: "#9C27B0" },
-  { level: 5, name: "Master", requiredScore: 750, speed: 9, gravity: 1.2, jumpForce: -12, obstacleGap: 120, color: "#F44336" },
-  { level: 6, name: "Legend", requiredScore: 1000, speed: 10, gravity: 1.3, jumpForce: -13, obstacleGap: 100, color: "#FFD700" },
-  { level: 7, name: "Champion", requiredScore: 1500, speed: 11, gravity: 1.4, jumpForce: -14, obstacleGap: 80, color: "#E91E63" },
-  { level: 8, name: "Grandmaster", requiredScore: 2000, speed: 12, gravity: 1.5, jumpForce: -15, obstacleGap: 60, color: "#00BCD4" },
-  { level: 9, name: "Supreme", requiredScore: 3000, speed: 13, gravity: 1.6, jumpForce: -16, obstacleGap: 40, color: "#795548" },
-  { level: 10, name: "Ultimate", requiredScore: 5000, speed: 15, gravity: 1.8, jumpForce: -18, obstacleGap: 30, color: "#607D8B" }
+  { level: 1, name: "Beginner", requiredScore: 0, speed: 5, gravity: 0.7, jumpForce: -12, obstacleGap: 200, color: "#4CAF50" },
+  { level: 2, name: "Novice", requiredScore: 50, speed: 6, gravity: 0.8, jumpForce: -13, obstacleGap: 180, color: "#2196F3" },
+  { level: 3, name: "Skilled", requiredScore: 150, speed: 7, gravity: 0.9, jumpForce: -14, obstacleGap: 160, color: "#FF9800" },
+  { level: 4, name: "Expert", requiredScore: 300, speed: 8, gravity: 1.0, jumpForce: -15, obstacleGap: 140, color: "#9C27B0" },
+  { level: 5, name: "Master", requiredScore: 500, speed: 9, gravity: 1.1, jumpForce: -16, obstacleGap: 120, color: "#F44336" },
+  { level: 6, name: "Legend", requiredScore: 750, speed: 10, gravity: 1.2, jumpForce: -17, obstacleGap: 100, color: "#FFD700" },
+  { level: 7, name: "Champion", requiredScore: 1000, speed: 11, gravity: 1.3, jumpForce: -18, obstacleGap: 80, color: "#E91E63" },
+  { level: 8, name: "Grandmaster", requiredScore: 1500, speed: 12, gravity: 1.4, jumpForce: -19, obstacleGap: 60, color: "#00BCD4" },
+  { level: 9, name: "Supreme", requiredScore: 2000, speed: 13, gravity: 1.5, jumpForce: -20, obstacleGap: 40, color: "#795548" },
+  { level: 10, name: "Ultimate", requiredScore: 3000, speed: 15, gravity: 1.6, jumpForce: -22, obstacleGap: 30, color: "#607D8B" }
 ];
 
 // Achievement system
@@ -87,6 +87,7 @@ const Game = () => {
   const [doubleJumpUsed, setDoubleJumpUsed] = useState(false);
   const [lastTapTime, setLastTapTime] = useState(0);
   const [showPowerUp, setShowPowerUp] = useState(false);
+  const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, vx: number, vy: number, life: number, type: string}>>([]);
   
   const [zuboY, setZuboY] = useState(GAME_HEIGHT - ZUBO_SIZE - 50);
   const [zuboVelocity, setZuboVelocity] = useState(0);
@@ -232,6 +233,33 @@ const Game = () => {
     return levelData.jumpForce * powerMultiplier;
   };
 
+  // Particle system for professional effects
+  const createParticles = (x: number, y: number, type: string, count: number = 5) => {
+    const newParticles = [];
+    for (let i = 0; i < count; i++) {
+      newParticles.push({
+        id: Date.now() + i,
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 4,
+        vy: (Math.random() - 0.5) * 4 - 2,
+        life: 1.0,
+        type: type
+      });
+    }
+    setParticles(prev => [...prev, ...newParticles]);
+  };
+
+  const updateParticles = () => {
+    setParticles(prev => prev.map(particle => ({
+      ...particle,
+      x: particle.x + particle.vx,
+      y: particle.y + particle.vy,
+      vy: particle.vy + 0.1, // gravity
+      life: particle.life - 0.02
+    })).filter(particle => particle.life > 0));
+  };
+
   // Generate obstacles - moved to top to avoid hoisting issues
   const generateObstacle = useCallback((lastX: number): Obstacle => {
     const levelData = getCurrentLevelData();
@@ -343,6 +371,9 @@ const Game = () => {
       setZuboVelocity(jumpPower);
       setIsJumping(true);
       setDoubleJumpUsed(false);
+      
+      // Create jump particles
+      createParticles(100 + ZUBO_SIZE / 2, zuboYRef.current + ZUBO_SIZE, "jump", 8);
       
       // Check for first jump achievement
       if (!achievements.includes("first_jump")) {
@@ -580,15 +611,11 @@ const Game = () => {
         return filtered;
       });
 
-      // Update scroll and score with realistic scoring
+      // Update scroll (no automatic scoring)
       setScrollOffset(prev => prev + levelData.speed);
-      setScore(prev => {
-        const newScore = prev + 1; // Much more realistic scoring - 1 point per frame
-        checkLevelUp(newScore);
-        updatePowerLevel(newScore);
-        checkAchievements(newScore, totalCoins, timeElapsed);
-        return newScore;
-      });
+      
+      // Update particles
+      updateParticles();
 
       // Check collisions using refs to avoid stale closures
       const zuboX = 100;
@@ -613,6 +640,9 @@ const Game = () => {
                 updatePowerLevel(newScore);
                 return newScore;
               });
+              
+              // Create destruction particles
+              createParticles(obs.x + obs.width / 2, obs.y + obs.height / 2, "destruction", 10);
               
               // Play destruction sound
               const audioContext = getAudioContext();
@@ -661,6 +691,10 @@ const Game = () => {
               checkAchievements(newScore, totalCoins + 1, timeElapsed);
               return newScore;
             });
+            
+            // Create coin collection particles
+            createParticles(obs.x + obs.width / 2, obs.y + obs.height / 2, "coin", 6);
+            
             playCoinSound();
             setObstacles(prev => prev.filter(o => o !== obs));
           }
@@ -948,6 +982,33 @@ const Game = () => {
     ctx.beginPath();
     ctx.arc(zuboX + ZUBO_SIZE / 2, zuboY + ZUBO_SIZE / 2 + 3, 12, 0, Math.PI);
     ctx.stroke();
+
+    // Draw particles
+    particles.forEach(particle => {
+      if (particle.life > 0) {
+        ctx.save();
+        ctx.globalAlpha = particle.life;
+        
+        if (particle.type === "jump") {
+          ctx.fillStyle = "#FFD700";
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (particle.type === "coin") {
+          ctx.fillStyle = "#FFD700";
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (particle.type === "destruction") {
+          ctx.fillStyle = "#FF4444";
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        ctx.restore();
+      }
+    });
 
     // Draw enhanced 3D legs
     if (zuboDesign.legType === "springy") {
