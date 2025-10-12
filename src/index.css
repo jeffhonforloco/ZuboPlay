@@ -187,10 +187,76 @@ All colors MUST be HSL.
     }
   }
   
-  /* Responsive text scaling */
+  /* Mobile-first responsive design */
   @media (max-width: 640px) {
     .text-responsive {
       font-size: clamp(0.875rem, 4vw, 1.125rem);
+    }
+    
+    /* Mobile-specific animations */
+    .mobile-bounce {
+      animation: mobile-bounce 0.6s ease-out;
+    }
+    
+    @keyframes mobile-bounce {
+      0% { transform: scale(0.8) translateY(10px); opacity: 0.8; }
+      50% { transform: scale(1.05) translateY(-5px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    
+    /* Touch-friendly interactions */
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Mobile game canvas optimizations */
+    .game-canvas-mobile {
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  }
+  
+  /* Tablet responsive design */
+  @media (min-width: 641px) and (max-width: 1024px) {
+    .tablet-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  /* Desktop enhancements */
+  @media (min-width: 1025px) {
+    .desktop-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  /* Ultra-wide screens */
+  @media (min-width: 1440px) {
+    .ultra-wide {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+  }
+  
+  /* Mobile landscape orientation */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .landscape-mobile {
+      padding: 0.5rem;
+    }
+    
+    .landscape-mobile .game-container {
+      height: calc(100vh - 2rem);
+    }
+  }
+  
+  /* High DPI displays */
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .high-dpi {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
     }
   }
 }

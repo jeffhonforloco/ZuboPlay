@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Play, Pause, RotateCcw, Settings } from "lucide-react";
 import SettingsComponent from "@/components/Settings";
+import MobileNavigation from "@/components/MobileNavigation";
 
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 400;
@@ -636,35 +637,38 @@ const Game = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background py-2 md:py-8 px-2 md:px-6">
-      <div className="container mx-auto max-w-4xl">
-        <div className="flex justify-between items-center mb-2 md:mb-6">
+    <div className="min-h-screen bg-background py-2 md:py-8 px-2 md:px-6 landscape-mobile">
+      <MobileNavigation />
+      <div className="container mx-auto max-w-4xl ultra-wide">
+        <div className="flex justify-between items-center mb-2 md:mb-6 gap-2">
           <Button
             variant="ghost"
             onClick={() => navigate("/")}
-            className="text-sm md:text-base"
+            className="text-xs sm:text-sm md:text-base touch-target"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
+            <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Back to Home</span>
+            <span className="sm:hidden">Back</span>
           </Button>
           <Button
             variant="ghost"
             onClick={() => setShowSettings(true)}
-            className="text-sm md:text-base"
+            className="text-xs sm:text-sm md:text-base touch-target"
             aria-label="Open game settings"
           >
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
+            <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Settings</span>
+            <span className="sm:hidden">⚙️</span>
           </Button>
         </div>
 
         <Card className="p-2 md:p-8 bg-gradient-to-br from-card via-card to-primary/5 shadow-xl border-2 md:border-4">
           <div className="text-center mb-2 md:mb-6">
-            <h1 className="text-xl md:text-4xl font-black text-foreground mb-1 md:mb-2 drop-shadow-lg">Zubo Jump</h1>
-            <p className="text-xs md:text-base text-muted-foreground">Tap or Press Space to Jump!</p>
+            <h1 className="text-lg sm:text-xl md:text-4xl font-black text-foreground mb-1 md:mb-2 drop-shadow-lg text-responsive">Zubo Jump</h1>
+            <p className="text-xs md:text-base text-muted-foreground text-responsive">Tap or Press Space to Jump!</p>
           </div>
 
-          <div className="grid grid-cols-2 md:flex md:justify-between mb-3 md:mb-4 gap-2">
+          <div className="grid grid-cols-2 md:flex md:justify-between mb-3 md:mb-4 gap-2 tablet-grid">
             <div className="text-center bg-primary/10 px-2 md:px-4 py-2 rounded-xl border-2 border-primary/20">
               <div className="text-lg md:text-2xl font-bold text-primary drop-shadow">{score}</div>
               <div className="text-xs text-muted-foreground">Score</div>
@@ -685,11 +689,11 @@ const Game = () => {
 
           <div 
             ref={containerRef}
-            className="relative bg-gradient-to-b from-accent/5 to-primary/5 rounded-xl md:rounded-2xl overflow-hidden mx-auto border-2 md:border-4 border-primary/20 shadow-2xl w-full"
+            className="relative bg-gradient-to-b from-accent/5 to-primary/5 rounded-xl md:rounded-2xl overflow-hidden mx-auto border-2 md:border-4 border-primary/20 shadow-2xl w-full game-container"
             style={{ 
               aspectRatio: `${GAME_WIDTH} / ${GAME_HEIGHT}`,
-              maxHeight: 'calc(100vh - 280px)',
-              minHeight: '300px'
+              maxHeight: 'calc(100vh - 200px)',
+              minHeight: '250px'
             }}
           >
             <canvas
@@ -710,7 +714,7 @@ const Game = () => {
               tabIndex={0}
               role="button"
               aria-label="Game canvas - Press space or click to make Zubo jump"
-              className="cursor-pointer w-full h-full touch-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              className="cursor-pointer w-full h-full touch-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 game-canvas-mobile"
               style={{
                 width: '100%',
                 height: '100%',

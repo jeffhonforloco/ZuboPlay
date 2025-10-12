@@ -91,26 +91,26 @@ export const RhythmDemo = () => {
   }, []);
 
   return (
-    <section className="py-20 px-6 bg-background">
-      <div className="container mx-auto max-w-6xl">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-black text-foreground mb-4">
+    <section className="py-12 md:py-20 px-4 md:px-6 bg-background">
+      <div className="container mx-auto max-w-6xl ultra-wide">
+        <div className="text-center mb-8 md:mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-4 text-responsive">
             Jump to the Beat
           </h2>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-lg md:text-xl text-muted-foreground text-responsive">
             Tap in rhythm to guide your Zubo through musical worlds
           </p>
         </div>
 
-        <Card className="p-8 bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 border-2 border-primary/20">
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <Music2 className="w-8 h-8 text-accent animate-pulse" />
-            <div className="text-2xl font-bold">Melody Fields</div>
-            <Music2 className="w-8 h-8 text-accent animate-pulse" />
+        <Card className="p-4 md:p-8 bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 border-2 border-primary/20">
+          <div className="flex items-center justify-center gap-2 md:gap-4 mb-6 md:mb-8">
+            <Music2 className="w-6 h-6 md:w-8 md:h-8 text-accent animate-pulse" />
+            <div className="text-lg md:text-2xl font-bold text-responsive">Melody Fields</div>
+            <Music2 className="w-6 h-6 md:w-8 md:h-8 text-accent animate-pulse" />
           </div>
 
           {/* Rhythm Track */}
-          <div className="relative h-48 bg-muted/30 rounded-xl overflow-hidden">
+          <div className="relative h-32 md:h-48 bg-muted/30 rounded-xl overflow-hidden">
             {/* Background lines */}
             <div className="absolute inset-0 flex">
               {[...Array(5)].map((_, i) => (
@@ -133,7 +133,7 @@ export const RhythmDemo = () => {
                     <div className="absolute w-16 h-16 bg-accent rounded-full animate-ping" />
                   )}
                   <div 
-                    className={`w-12 h-12 rounded-full border-4 transition-all ${
+                    className={`w-8 h-8 md:w-12 md:h-12 rounded-full border-2 md:border-4 transition-all touch-target ${
                       activeNotes.includes(i)
                         ? "bg-accent border-accent/50 scale-125"
                         : "bg-background border-accent/30"
@@ -152,20 +152,20 @@ export const RhythmDemo = () => {
           </div>
 
           {/* Gameplay stats */}
-          <div className="grid grid-cols-3 gap-4 mt-8">
-            <div className="text-center p-4 bg-primary/10 rounded-xl">
-              <div className="text-3xl font-black text-primary">{score.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">Score</div>
+          <div className="grid grid-cols-3 gap-2 md:gap-4 mt-6 md:mt-8">
+            <div className="text-center p-3 md:p-4 bg-primary/10 rounded-xl">
+              <div className="text-xl md:text-3xl font-black text-primary text-responsive">{score.toLocaleString()}</div>
+              <div className="text-xs md:text-sm text-muted-foreground text-responsive">Score</div>
             </div>
-            <div className="text-center p-4 bg-accent/10 rounded-xl">
-              <div className="text-3xl font-black text-accent">{combo}</div>
-              <div className="text-sm text-muted-foreground">Combo</div>
+            <div className="text-center p-3 md:p-4 bg-accent/10 rounded-xl">
+              <div className="text-xl md:text-3xl font-black text-accent text-responsive">{combo}</div>
+              <div className="text-xs md:text-sm text-muted-foreground text-responsive">Combo</div>
             </div>
-            <div className="text-center p-4 bg-secondary/20 rounded-xl">
-              <div className="text-3xl font-black text-secondary-foreground">
+            <div className="text-center p-3 md:p-4 bg-secondary/20 rounded-xl">
+              <div className="text-xl md:text-3xl font-black text-secondary-foreground text-responsive">
                 {total > 0 ? Math.round((hits / total) * 100) : 0}%
               </div>
-              <div className="text-sm text-muted-foreground">Accuracy</div>
+              <div className="text-xs md:text-sm text-muted-foreground text-responsive">Accuracy</div>
             </div>
           </div>
         </Card>

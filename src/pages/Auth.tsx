@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/AuthForm";
 import { useAuth } from "@/hooks/useAuth";
+import MobileNavigation from "@/components/MobileNavigation";
 
 const Auth = () => {
   const { user, loading } = useAuth();
@@ -22,7 +23,8 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary via-secondary/80 to-accent/20 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary via-secondary/80 to-accent/20 p-4 md:p-6">
+      <MobileNavigation />
       <AuthForm />
     </div>
   );

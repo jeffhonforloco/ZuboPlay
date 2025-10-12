@@ -123,25 +123,25 @@ export const ZuboCreator = () => {
   };
 
   return (
-    <section id="creator" className="py-20 px-6 bg-muted/30">
-      <div className="container mx-auto max-w-6xl">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-black text-foreground mb-4">
+    <section id="creator" className="py-12 md:py-20 px-4 md:px-6 bg-muted/30">
+      <div className="container mx-auto max-w-6xl ultra-wide">
+        <div className="text-center mb-8 md:mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-4 text-responsive">
             Build Your Zubo
           </h2>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-lg md:text-xl text-muted-foreground text-responsive">
             Mix and match parts to create your unique bouncy friend
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-6 md:gap-8 tablet-grid">
           {/* Preview */}
-          <Card className="p-8 bg-gradient-to-br from-secondary/20 to-accent/10 border-2">
-            <h3 className="text-2xl font-bold mb-6 text-center">Preview</h3>
+          <Card className="p-4 md:p-8 bg-gradient-to-br from-secondary/20 to-accent/10 border-2 order-2 lg:order-1">
+            <h3 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-center text-responsive">Preview</h3>
             {renderZuboPreview()}
-            <div className="mt-8 flex gap-4">
+            <div className="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 md:gap-4">
               <Button 
-                className="flex-1 bg-primary hover:bg-primary/90 font-bold rounded-full"
+                className="flex-1 bg-primary hover:bg-primary/90 font-bold rounded-full touch-target mobile-bounce"
                 onClick={handleSave}
                 disabled={isSaving}
               >
@@ -149,55 +149,56 @@ export const ZuboCreator = () => {
               </Button>
               <Button 
                 variant="outline"
-                className="border-2 rounded-full"
+                className="border-2 rounded-full touch-target mobile-bounce"
                 onClick={handleRandomize}
               >
                 <Sparkles className="w-4 h-4 mr-2" />
-                AI Random
+                <span className="hidden sm:inline">AI Random</span>
+                <span className="sm:hidden">Random</span>
               </Button>
             </div>
           </Card>
 
           {/* Controls */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6 order-1 lg:order-2">
             {/* Body Type */}
-            <Card className="p-6">
-              <h4 className="font-bold text-lg mb-4">Body Shape</h4>
-              <div className="grid grid-cols-3 gap-3">
+            <Card className="p-4 md:p-6">
+              <h4 className="font-bold text-base md:text-lg mb-3 md:mb-4 text-responsive">Body Shape</h4>
+              <div className="grid grid-cols-3 gap-2 md:gap-3">
                 {(["sphere", "cube", "tube"] as BodyType[]).map((type) => (
                   <button
                     key={type}
                     onClick={() => setBodyType(type)}
-                    className={`p-4 rounded-xl border-2 transition-all ${
+                    className={`p-3 md:p-4 rounded-xl border-2 transition-all touch-target mobile-bounce ${
                       bodyType === type
                         ? "border-primary bg-primary/10 scale-105"
                         : "border-border hover:border-primary/50"
                     }`}
                   >
-                    <div className="text-sm font-medium capitalize">{type}</div>
+                    <div className="text-xs md:text-sm font-medium capitalize text-responsive">{type}</div>
                   </button>
                 ))}
               </div>
             </Card>
 
             {/* Leg Type */}
-            <Card className="p-6">
-              <h4 className="font-bold text-lg mb-4">Legs</h4>
-              <div className="grid grid-cols-2 gap-3">
+            <Card className="p-4 md:p-6">
+              <h4 className="font-bold text-base md:text-lg mb-3 md:mb-4 text-responsive">Legs</h4>
+              <div className="grid grid-cols-2 gap-2 md:gap-3">
                 {(["springy", "short"] as LegType[]).map((type) => (
                   <button
                     key={type}
                     onClick={() => setLegType(type)}
-                    className={`p-4 rounded-xl border-2 transition-all ${
+                    className={`p-3 md:p-4 rounded-xl border-2 transition-all touch-target mobile-bounce ${
                       legType === type
                         ? "border-primary bg-primary/10 scale-105"
                         : "border-border hover:border-primary/50"
                     }`}
                   >
-                    <div className="text-sm font-medium capitalize">
+                    <div className="text-xs md:text-sm font-medium capitalize text-responsive">
                       {type} {type === "springy" ? "🦘" : "🐾"}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
+                    <div className="text-xs text-muted-foreground mt-1 text-responsive">
                       {type === "springy" ? "High Jump" : "Fast Speed"}
                     </div>
                   </button>
@@ -206,20 +207,21 @@ export const ZuboCreator = () => {
             </Card>
 
             {/* Color Picker */}
-            <Card className="p-6">
-              <h4 className="font-bold text-lg mb-4">Color</h4>
-              <div className="flex gap-3">
+            <Card className="p-4 md:p-6">
+              <h4 className="font-bold text-base md:text-lg mb-3 md:mb-4 text-responsive">Color</h4>
+              <div className="flex gap-2 md:gap-3 flex-wrap">
                 {bodyColors.map((c) => (
                   <button
                     key={c.value}
                     onClick={() => setColor(c.value)}
-                    className={`w-12 h-12 rounded-full border-4 transition-all ${
+                    className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-4 transition-all touch-target mobile-bounce ${
                       color === c.value
                         ? "border-foreground scale-110"
                         : "border-border hover:scale-105"
                     }`}
                     style={{ backgroundColor: c.value }}
                     title={c.name}
+                    aria-label={`Select ${c.name} color`}
                   />
                 ))}
               </div>

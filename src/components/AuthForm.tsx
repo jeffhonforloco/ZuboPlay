@@ -107,12 +107,12 @@ export const AuthForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-md p-8 bg-card border-2 border-primary/20">
-      <div className="text-center mb-6">
-        <h2 className="text-3xl font-black text-foreground mb-2">
+    <Card className="w-full max-w-md p-4 md:p-8 bg-card border-2 border-primary/20">
+      <div className="text-center mb-4 md:mb-6">
+        <h2 className="text-2xl md:text-3xl font-black text-foreground mb-2 text-responsive">
           {mode === "signin" ? "Welcome Back!" : "Join ZuboPlay"}
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-sm md:text-base text-muted-foreground text-responsive">
           {mode === "signin" 
             ? "Sign in to access your Zubos" 
             : "Create an account to start building Zubos"}
@@ -171,7 +171,7 @@ export const AuthForm = () => {
 
         <Button
           type="submit"
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg py-6 rounded-full"
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base md:text-lg py-4 md:py-6 rounded-full touch-target mobile-bounce"
           disabled={isLoading}
         >
           {isLoading ? "Loading..." : mode === "signin" ? "Sign In" : "Create Account"}
