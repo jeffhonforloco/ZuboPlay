@@ -97,6 +97,24 @@ const Game = () => {
   const [cameraZoom, setCameraZoom] = useState(1);
   const [environment, setEnvironment] = useState("forest");
   
+  // Audio context ref and function
+  const audioContextRef = useRef<AudioContext | null>(null);
+  
+  // Initialize audio context once
+  const getAudioContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      try {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      } catch (e) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Audio not supported');
+        }
+        return null;
+      }
+    }
+    return audioContextRef.current;
+  }, []);
+  
   // Power-ups system
   const [activePowerUps, setActivePowerUps] = useState<Array<{type: string, duration: number, startTime: number}>>([]);
   const [shieldActive, setShieldActive] = useState(false);
@@ -372,23 +390,6 @@ const Game = () => {
   }, [generateObstacle]);
 
   // Audio context ref for better performance
-  const audioContextRef = useRef<AudioContext | null>(null);
-  
-  // Initialize audio context once
-  const getAudioContext = useCallback(() => {
-    if (!audioContextRef.current) {
-      try {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      } catch (e) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Audio not supported');
-        }
-        return null;
-      }
-    }
-    return audioContextRef.current;
-  }, []);
-
   // Load user's Zubo design and high score
   useEffect(() => {
     const loadUserData = async () => {
