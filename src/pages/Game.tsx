@@ -997,7 +997,6 @@ const Game = () => {
         ctx.textAlign = "center";
         ctx.fillText("🧲", obs.x + obs.width / 2, obs.y + obs.height / 2 + 5);
       }
-    });
 
     // Draw Zubo with enhanced 3D cartoon style
     const zuboX = 100;
