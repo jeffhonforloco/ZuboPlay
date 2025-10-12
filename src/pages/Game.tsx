@@ -86,6 +86,7 @@ const Game = () => {
   const [canDestroyObstacles, setCanDestroyObstacles] = useState(false);
   const [doubleJumpUsed, setDoubleJumpUsed] = useState(false);
   const [lastTapTime, setLastTapTime] = useState(0);
+  const lastTapTimeRef = useRef(0);
   const [showPowerUp, setShowPowerUp] = useState(false);
   const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, vx: number, vy: number, life: number, type: string}>>([]);
   
@@ -431,7 +432,7 @@ const Game = () => {
     if (gameState !== "playing") return;
     
     const currentTime = Date.now();
-    const isDoubleTap = currentTime - lastTapTime < 300; // 300ms double-tap window
+    const isDoubleTap = currentTime - lastTapTimeRef.current < 300; // 300ms double-tap window
     
     // Regular jump
     if (!isJumpingRef.current) {
@@ -483,6 +484,7 @@ const Game = () => {
     }
     
     setLastTapTime(currentTime);
+    lastTapTimeRef.current = currentTime;
     
     // Play jump sound (musical note) for regular jump
     if (!isDoubleTap || !canDoubleJump || doubleJumpUsed) {
@@ -510,7 +512,7 @@ const Game = () => {
         }
       }
     }
-  }, [gameState, getAudioContext, canDoubleJump, doubleJumpUsed, lastTapTime]);
+  }, [gameState, getAudioContext, canDoubleJump, doubleJumpUsed]);
 
   // Play coin collection sound (musical arpeggio)
   const playCoinSound = useCallback(() => {
