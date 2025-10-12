@@ -50,7 +50,7 @@ type Obstacle = {
   y: number;
   width: number;
   height: number;
-  type: "platform" | "spike" | "coin" | "shield" | "speed" | "magnet";
+  type: "platform" | "spike" | "coin";
 };
 
 type BodyType = "sphere" | "cube" | "tube";
@@ -86,7 +86,6 @@ const Game = () => {
   const [canDestroyObstacles, setCanDestroyObstacles] = useState(false);
   const [doubleJumpUsed, setDoubleJumpUsed] = useState(false);
   const [lastTapTime, setLastTapTime] = useState(0);
-  const lastTapTimeRef = useRef(0);
   const [showPowerUp, setShowPowerUp] = useState(false);
   const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, vx: number, vy: number, life: number, type: string}>>([]);
   
@@ -292,50 +291,6 @@ const Game = () => {
     })).filter(particle => particle.life > 0));
   };
 
-  // Dynamic soundtrack system
-  const playBackgroundMusic = useCallback(() => {
-    const audioContext = getAudioContext();
-    if (!audioContext) return;
-    
-    try {
-      // Create ambient background music based on level
-      const oscillator1 = audioContext.createOscillator();
-      const oscillator2 = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator1.connect(gainNode);
-      oscillator2.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      // Different frequencies based on level
-      const baseFreq = 220 + (currentLevel * 20);
-      oscillator1.frequency.value = baseFreq;
-      oscillator2.frequency.value = baseFreq * 1.5;
-      
-      oscillator1.type = 'sine';
-      oscillator2.type = 'triangle';
-      
-      gainNode.gain.setValueAtTime(musicVolume, audioContext.currentTime);
-      
-      oscillator1.start(audioContext.currentTime);
-      oscillator2.start(audioContext.currentTime);
-      
-      // Stop after 2 seconds to avoid overlap
-      oscillator1.stop(audioContext.currentTime + 2);
-      oscillator2.stop(audioContext.currentTime + 2);
-    } catch (e) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Audio not supported');
-      }
-    }
-  }, [currentLevel, musicVolume, getAudioContext]);
-
-  // Screen shake effect
-  const triggerScreenShake = (intensity: number) => {
-    setScreenShake(intensity);
-    setTimeout(() => setScreenShake(0), 200);
-  };
-
   // Generate obstacles - moved to top to avoid hoisting issues
   const generateObstacle = useCallback((lastX: number): Obstacle => {
     const levelData = getCurrentLevelData();
@@ -343,18 +298,7 @@ const Game = () => {
     const x = lastX + gap;
     const rand = Math.random();
     
-    if (rand > 0.85) {
-      // Power-ups (15% chance)
-      const powerUpTypes = ["shield", "speed", "magnet"];
-      const powerUpType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
-      return {
-        x,
-        y: GAME_HEIGHT - 150 - Math.random() * 150,
-        width: 25,
-        height: 25,
-        type: powerUpType as "shield" | "speed" | "magnet"
-      };
-    } else if (rand > 0.7) {
+    if (rand > 0.7) {
       // Coin
       return {
         x,
@@ -433,7 +377,7 @@ const Game = () => {
     if (gameState !== "playing") return;
     
     const currentTime = Date.now();
-    const isDoubleTap = currentTime - lastTapTimeRef.current < 300; // 300ms double-tap window
+    const isDoubleTap = currentTime - lastTapTime < 300; // 300ms double-tap window
     
     // Regular jump
     if (!isJumpingRef.current) {
@@ -485,7 +429,6 @@ const Game = () => {
     }
     
     setLastTapTime(currentTime);
-    lastTapTimeRef.current = currentTime;
     
     // Play jump sound (musical note) for regular jump
     if (!isDoubleTap || !canDoubleJump || doubleJumpUsed) {
@@ -513,7 +456,7 @@ const Game = () => {
         }
       }
     }
-  }, [gameState, getAudioContext, canDoubleJump, doubleJumpUsed]);
+  }, [gameState, getAudioContext, canDoubleJump, doubleJumpUsed, lastTapTime]);
 
   // Play coin collection sound (musical arpeggio)
   const playCoinSound = useCallback(() => {
@@ -715,9 +658,6 @@ const Game = () => {
               // Create destruction particles
               createParticles(obs.x + obs.width / 2, obs.y + obs.height / 2, "destruction", 10);
               
-              // Screen shake for destruction
-              triggerScreenShake(3);
-              
               // Play destruction sound
               const audioContext = getAudioContext();
               if (audioContext) {
@@ -742,24 +682,20 @@ const Game = () => {
                   }
                 }
               }
-              } else {
-                // Normal spike collision
-                setPerfectRun(false); // Reset perfect run on spike hit
-                playSpikeSound();
-                
-                // Screen shake for spike hit
-                triggerScreenShake(5);
-                
-                setCoins(prev => {
-                  const newCoins = prev - 1;
-                  if (newCoins <= 0) {
-                    setGameState("gameover");
-                    saveScore();
-                  }
-                  return newCoins;
-                });
-                setObstacles(prev => prev.filter(o => o !== obs));
-              }
+            } else {
+              // Normal spike collision
+              setPerfectRun(false); // Reset perfect run on spike hit
+              playSpikeSound();
+              setCoins(prev => {
+                const newCoins = prev - 1;
+                if (newCoins <= 0) {
+                  setGameState("gameover");
+                  saveScore();
+                }
+                return newCoins;
+              });
+              setObstacles(prev => prev.filter(o => o !== obs));
+            }
           } else if (obs.type === "coin") {
             setCoins(prev => prev + 1);
             setTotalCoins(prev => prev + 1);
@@ -774,24 +710,6 @@ const Game = () => {
             createParticles(obs.x + obs.width / 2, obs.y + obs.height / 2, "coin", 6);
             
             playCoinSound();
-            setObstacles(prev => prev.filter(o => o !== obs));
-          } else if (obs.type === "shield") {
-            // Shield power-up
-            setShieldActive(true);
-            setActivePowerUps(prev => [...prev, { type: "shield", duration: 10000, startTime: Date.now() }]);
-            createParticles(obs.x + obs.width / 2, obs.y + obs.height / 2, "shield", 8);
-            setObstacles(prev => prev.filter(o => o !== obs));
-          } else if (obs.type === "speed") {
-            // Speed boost power-up
-            setSpeedBoost(1.5);
-            setActivePowerUps(prev => [...prev, { type: "speed", duration: 8000, startTime: Date.now() }]);
-            createParticles(obs.x + obs.width / 2, obs.y + obs.height / 2, "speed", 8);
-            setObstacles(prev => prev.filter(o => o !== obs));
-          } else if (obs.type === "magnet") {
-            // Magnet power-up
-            setMagnetActive(true);
-            setActivePowerUps(prev => [...prev, { type: "magnet", duration: 6000, startTime: Date.now() }]);
-            createParticles(obs.x + obs.width / 2, obs.y + obs.height / 2, "magnet", 8);
             setObstacles(prev => prev.filter(o => o !== obs));
           }
         }
@@ -808,68 +726,13 @@ const Game = () => {
     };
   }, [gameState, playSpikeSound, playCoinSound, saveScore]); // Removed generateObstacle to avoid circular dependency
 
-  // Test canvas immediately on mount
-  useEffect(() => {
-    console.log("Component mounted, testing canvas...");
-    const canvas = canvasRef.current;
-    if (canvas) {
-      console.log("Canvas found:", canvas.width, "x", canvas.height);
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        console.log("Canvas context found");
-        // Draw a test rectangle
-        ctx.fillStyle = "#FF0000";
-        ctx.fillRect(0, 0, 100, 100);
-        console.log("Test rectangle drawn");
-      } else {
-        console.log("Canvas context NOT found");
-      }
-    } else {
-      console.log("Canvas NOT found");
-    }
-  }, []);
-
-  // Draw game - ALWAYS draw regardless of game state
+  // Draw game
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) {
-      console.log("Canvas not found");
-      return;
-    }
+    if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      console.log("Canvas context not found");
-      return;
-    }
-
-    console.log("Drawing game state:", gameState, "obstacles:", obstacles.length, "zuboY:", zuboY);
-
-    // ALWAYS clear and draw - don't let game state prevent drawing
-    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    
-    // Test canvas with a simple rectangle to ensure it's working
-    ctx.fillStyle = "#FF0000";
-    ctx.fillRect(10, 10, 50, 50);
-    
-    // Draw a simple background that should always be visible
-    ctx.fillStyle = "#87CEEB";
-    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    
-    // Draw a simple ground
-    ctx.fillStyle = "#8BC34A";
-    ctx.fillRect(0, GAME_HEIGHT - 50, GAME_WIDTH, 50);
-    
-    // Draw a simple Zubo character
-    ctx.fillStyle = "#FF6B9D";
-    ctx.fillRect(100, zuboY, ZUBO_SIZE, ZUBO_SIZE);
-
-    // Apply screen shake effect
-    const shakeX = screenShake > 0 ? (Math.random() - 0.5) * screenShake : 0;
-    const shakeY = screenShake > 0 ? (Math.random() - 0.5) * screenShake : 0;
-    
-    ctx.save();
-    ctx.translate(shakeX, shakeY);
+    if (!ctx) return;
 
     // Clear canvas with gradient sky
     const skyGradient = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
@@ -966,44 +829,6 @@ const Game = () => {
         // Highlight on top
         ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
         ctx.fillRect(obs.x + 2, obs.y + 2, obs.width - 4, obs.height / 3);
-      }
-    });
-
-    // Draw power-ups
-    obstacles.forEach(obs => {
-      if (obs.type === "shield") {
-        // Shield power-up
-        ctx.fillStyle = "#4CAF50";
-        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-        ctx.fillStyle = "#2E7D32";
-        ctx.fillRect(obs.x + 2, obs.y + 2, obs.width - 4, obs.height - 4);
-        // Shield icon
-        ctx.fillStyle = "#FFFFFF";
-        ctx.font = "16px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("🛡️", obs.x + obs.width / 2, obs.y + obs.height / 2 + 5);
-      } else if (obs.type === "speed") {
-        // Speed power-up
-        ctx.fillStyle = "#FF9800";
-        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-        ctx.fillStyle = "#F57C00";
-        ctx.fillRect(obs.x + 2, obs.y + 2, obs.width - 4, obs.height - 4);
-        // Speed icon
-        ctx.fillStyle = "#FFFFFF";
-        ctx.font = "16px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("⚡", obs.x + obs.width / 2, obs.y + obs.height / 2 + 5);
-      } else if (obs.type === "magnet") {
-        // Magnet power-up
-        ctx.fillStyle = "#9C27B0";
-        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-        ctx.fillStyle = "#7B1FA2";
-        ctx.fillRect(obs.x + 2, obs.y + 2, obs.width - 4, obs.height - 4);
-        // Magnet icon
-        ctx.fillStyle = "#FFFFFF";
-        ctx.font = "16px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("🧲", obs.x + obs.width / 2, obs.y + obs.height / 2 + 5);
       }
     });
 
@@ -1193,21 +1018,6 @@ const Game = () => {
           ctx.beginPath();
           ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
           ctx.fill();
-        } else if (particle.type === "shield") {
-          ctx.fillStyle = "#4CAF50";
-          ctx.beginPath();
-          ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (particle.type === "speed") {
-          ctx.fillStyle = "#FF9800";
-          ctx.beginPath();
-          ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (particle.type === "magnet") {
-          ctx.fillStyle = "#9C27B0";
-          ctx.beginPath();
-          ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
-          ctx.fill();
         }
         
         ctx.restore();
@@ -1301,10 +1111,7 @@ const Game = () => {
       const B = (num & 0x0000FF) - amt;
       return "#" + (0x1000000 + (R>0?R:0)*0x10000 + (G>0?G:0)*0x100 + (B>0?B:0)).toString(16).slice(1);
     }
-    
-    // Restore canvas state after screen shake
-    ctx.restore();
-  }, [obstacles, zuboY, zuboDesign, screenShake, gameState, particles]);
+  }, [obstacles, zuboY, zuboDesign]);
 
   const startGame = () => {
     setGameState("playing");
@@ -1488,9 +1295,7 @@ const Game = () => {
               style={{
                 width: '100%',
                 height: '100%',
-                touchAction: 'none',
-                backgroundColor: '#87CEEB',
-                display: 'block'
+                touchAction: 'none'
               }}
             />
             
@@ -1595,34 +1400,6 @@ const Game = () => {
           </div>
         </Card>
       </div>
-
-      {/* Active Power-ups Display */}
-      {activePowerUps.length > 0 && (
-        <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm rounded-lg p-3 border-2 border-accent/20">
-          <div className="text-xs font-bold text-accent mb-2">Active Power-ups</div>
-          <div className="flex flex-wrap gap-1">
-            {activePowerUps.map((powerUp, index) => {
-              const remainingTime = Math.max(0, powerUp.duration - (Date.now() - powerUp.startTime));
-              const progress = remainingTime / powerUp.duration;
-              return (
-                <div key={index} className="flex items-center gap-1 bg-accent/20 px-2 py-1 rounded text-xs">
-                  <span>
-                    {powerUp.type === "shield" && "🛡️"}
-                    {powerUp.type === "speed" && "⚡"}
-                    {powerUp.type === "magnet" && "🧲"}
-                  </span>
-                  <div className="w-8 h-1 bg-gray-300 rounded">
-                    <div 
-                      className="h-full bg-accent rounded" 
-                      style={{ width: `${progress * 100}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {showSettings && (
         <SettingsComponent onClose={() => setShowSettings(false)} />
