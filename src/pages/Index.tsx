@@ -11,7 +11,9 @@ const Index = () => {
       <MobileNavigation />
       <Hero />
       <Features />
-      <ZuboCreator />
+      <div id="creator">
+        <ZuboCreator />
+      </div>
       <RhythmDemo />
       <CallToAction />
     </main>

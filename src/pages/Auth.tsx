@@ -10,7 +10,15 @@ const Auth = () => {
 
   useEffect(() => {
     if (!loading && user) {
+      // Redirect to home page and scroll to creator section
       navigate("/");
+      // Small delay to ensure page loads before scrolling
+      setTimeout(() => {
+        const creatorElement = document.getElementById('creator');
+        if (creatorElement) {
+          creatorElement.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
     }
   }, [user, loading, navigate]);
 
