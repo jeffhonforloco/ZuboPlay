@@ -49,6 +49,24 @@ const Game = () => {
   const [obstacles, setObstacles] = useState<Obstacle[]>([]);
   const [scrollOffset, setScrollOffset] = useState(0);
   
+  // Refs for current values to avoid stale closures
+  const zuboYRef = useRef(zuboY);
+  const obstaclesRef = useRef(obstacles);
+  const isJumpingRef = useRef(isJumping);
+  
+  // Update refs when state changes
+  useEffect(() => {
+    zuboYRef.current = zuboY;
+  }, [zuboY]);
+  
+  useEffect(() => {
+    obstaclesRef.current = obstacles;
+  }, [obstacles]);
+  
+  useEffect(() => {
+    isJumpingRef.current = isJumping;
+  }, [isJumping]);
+  
   const [zuboDesign, setZuboDesign] = useState<{
     bodyType: BodyType;
     legType: LegType;
@@ -138,7 +156,7 @@ const Game = () => {
   // Jump handler
   const jump = useCallback(() => {
     if (gameState !== "playing") return;
-    if (!isJumping) {
+    if (!isJumpingRef.current) {
       setZuboVelocity(JUMP_FORCE);
       setIsJumping(true);
       
@@ -167,7 +185,7 @@ const Game = () => {
         }
       }
     }
-  }, [gameState, isJumping, getAudioContext]);
+  }, [gameState, getAudioContext]);
 
   // Audio context ref for better performance
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -330,16 +348,17 @@ const Game = () => {
       setScrollOffset(prev => prev + GAME_SPEED);
       setScore(prev => prev + 1);
 
-      // Check collisions
+      // Check collisions using refs to avoid stale closures
       const zuboX = 100;
-      const zuboBottom = zuboY + ZUBO_SIZE;
+      const currentZuboY = zuboYRef.current;
+      const currentObstacles = obstaclesRef.current;
       
-      obstacles.forEach(obs => {
+      currentObstacles.forEach(obs => {
         const collision = 
           zuboX + ZUBO_SIZE > obs.x &&
           zuboX < obs.x + obs.width &&
-          zuboY + ZUBO_SIZE > obs.y &&
-          zuboY < obs.y + obs.height;
+          currentZuboY + ZUBO_SIZE > obs.y &&
+          currentZuboY < obs.y + obs.height;
 
         if (collision) {
           if (obs.type === "spike") {
@@ -371,7 +390,7 @@ const Game = () => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [gameState]); // Removed problematic dependencies that caused infinite re-renders
+  }, [gameState, generateObstacle, playSpikeSound, playCoinSound, saveScore]); // Fixed dependencies
 
   // Draw game
   useEffect(() => {
