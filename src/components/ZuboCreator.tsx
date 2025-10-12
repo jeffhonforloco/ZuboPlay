@@ -11,15 +11,15 @@ type BodyType = "sphere" | "cube" | "tube";
 type LegType = "springy" | "short";
 
 const bodyColors = [
-  { name: "Purple", value: "hsl(280, 75%, 60%)", gradient: "from-purple-500 to-purple-700" },
-  { name: "Cyan", value: "hsl(190, 95%, 45%)", gradient: "from-cyan-500 to-cyan-700" },
-  { name: "Pink", value: "hsl(330, 75%, 60%)", gradient: "from-pink-500 to-pink-700" },
-  { name: "Green", value: "hsl(150, 70%, 50%)", gradient: "from-green-500 to-green-700" },
-  { name: "Orange", value: "hsl(35, 95%, 60%)", gradient: "from-orange-500 to-orange-700" },
-  { name: "Blue", value: "hsl(220, 75%, 60%)", gradient: "from-blue-500 to-blue-700" },
-  { name: "Red", value: "hsl(0, 75%, 60%)", gradient: "from-red-500 to-red-700" },
-  { name: "Yellow", value: "hsl(60, 75%, 60%)", gradient: "from-yellow-500 to-yellow-700" },
-  { name: "Indigo", value: "hsl(240, 75%, 60%)", gradient: "from-indigo-500 to-indigo-700" },
+  { name: "Purple", value: "#8B5CF6", gradient: "from-purple-500 to-purple-700" },
+  { name: "Cyan", value: "#06B6D4", gradient: "from-cyan-500 to-cyan-700" },
+  { name: "Pink", value: "#EC4899", gradient: "from-pink-500 to-pink-700" },
+  { name: "Green", value: "#10B981", gradient: "from-green-500 to-green-700" },
+  { name: "Orange", value: "#F59E0B", gradient: "from-orange-500 to-orange-700" },
+  { name: "Blue", value: "#3B82F6", gradient: "from-blue-500 to-blue-700" },
+  { name: "Red", value: "#EF4444", gradient: "from-red-500 to-red-700" },
+  { name: "Yellow", value: "#EAB308", gradient: "from-yellow-500 to-yellow-700" },
+  { name: "Indigo", value: "#6366F1", gradient: "from-indigo-500 to-indigo-700" },
 ];
 
 export const ZuboCreator = () => {
@@ -92,9 +92,12 @@ export const ZuboCreator = () => {
       : "rounded-full scale-y-125";
     
     const legHeight = legType === "springy" ? "h-20" : "h-10";
+    
+    // Debug: Log current color
+    console.log("Current color:", color);
 
     return (
-      <div className="flex flex-col items-center justify-end h-80 relative">
+      <div key={`${bodyType}-${legType}-${color}`} className="flex flex-col items-center justify-end h-80 relative">
         {/* Premium Background Glow */}
         <div className="absolute inset-0 bg-gradient-to-t from-purple-500/20 to-pink-500/20 rounded-3xl blur-2xl scale-150" />
         
@@ -102,7 +105,7 @@ export const ZuboCreator = () => {
         <div 
           className={`relative w-40 h-40 ${bodyClass} shadow-[0_20px_60px_rgba(0,0,0,0.3)] transition-all duration-500 animate-bounce-slow border-4 border-white/20`}
           style={{ 
-            background: `linear-gradient(135deg, ${color}, ${color}dd)`,
+            backgroundColor: color,
             boxShadow: `0 20px 60px ${color}40, inset 0 2px 4px rgba(255,255,255,0.3)`
           }}
         >
@@ -306,14 +309,17 @@ export const ZuboCreator = () => {
                 {bodyColors.map((c) => (
                   <button
                     key={c.value}
-                    onClick={() => setColor(c.value)}
+                    onClick={() => {
+                      console.log("Color clicked:", c.name, c.value);
+                      setColor(c.value);
+                    }}
                     className={`group relative w-full aspect-square rounded-2xl border-4 transition-all duration-300 touch-target mobile-bounce ${
                       color === c.value
                         ? "border-gray-800 scale-110 shadow-lg"
                         : "border-gray-200 hover:scale-105 hover:shadow-md"
                     }`}
                     style={{ 
-                      background: `linear-gradient(135deg, ${c.value}, ${c.value}dd)`,
+                      backgroundColor: c.value,
                       boxShadow: color === c.value ? `0 10px 30px ${c.value}40` : undefined
                     }}
                     title={c.name}
