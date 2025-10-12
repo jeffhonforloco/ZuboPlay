@@ -49,10 +49,10 @@ const Game = () => {
   const [obstacles, setObstacles] = useState<Obstacle[]>([]);
   const [scrollOffset, setScrollOffset] = useState(0);
   
-  // Refs for current values to avoid stale closures
-  const zuboYRef = useRef(zuboY);
-  const obstaclesRef = useRef(obstacles);
-  const isJumpingRef = useRef(isJumping);
+  // Refs for current values to avoid stale closures - initialize with default values
+  const zuboYRef = useRef(GAME_HEIGHT - ZUBO_SIZE - 50);
+  const obstaclesRef = useRef<Obstacle[]>([]);
+  const isJumpingRef = useRef(false);
   
   // Update refs when state changes
   useEffect(() => {
@@ -79,31 +79,25 @@ const Game = () => {
 
   const [showSettings, setShowSettings] = useState(false);
 
-  // Load user's Zubo design and high score
-  useEffect(() => {
-    const loadUserData = async () => {
-      if (!user) return;
-      
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("favorite_zubo_design, total_games_played")
-        .eq("id", user.id)
-        .single();
-      
-      if (data?.favorite_zubo_design) {
-        const design = data.favorite_zubo_design as { bodyType: BodyType; legType: LegType; color: string };
-        setZuboDesign(design);
+  // Audio context ref for better performance - moved to top to avoid hoisting issues
+  const audioContextRef = useRef<AudioContext | null>(null);
+  
+  // Initialize audio context once
+  const getAudioContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      try {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      } catch (e) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Audio not supported');
+        }
+        return null;
       }
-      
-      if (data?.total_games_played) {
-        setHighScore(data.total_games_played * 100); // Mock high score
-      }
-    };
-    
-    loadUserData();
-  }, [user]);
+    }
+    return audioContextRef.current;
+  }, []);
 
-  // Generate obstacles
+  // Generate obstacles - moved before other functions to avoid hoisting issues
   const generateObstacle = useCallback((lastX: number): Obstacle => {
     const gap = 200 + Math.random() * 200;
     const x = lastX + gap;
@@ -138,6 +132,30 @@ const Game = () => {
       };
     }
   }, []);
+
+  // Load user's Zubo design and high score
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("favorite_zubo_design, total_games_played")
+        .eq("id", user.id)
+        .single();
+      
+      if (data?.favorite_zubo_design) {
+        const design = data.favorite_zubo_design as { bodyType: BodyType; legType: LegType; color: string };
+        setZuboDesign(design);
+      }
+      
+      if (data?.total_games_played) {
+        setHighScore(data.total_games_played * 100); // Mock high score
+      }
+    };
+    
+    loadUserData();
+  }, [user]);
 
   // Initialize obstacles
   useEffect(() => {
@@ -186,24 +204,6 @@ const Game = () => {
       }
     }
   }, [gameState, getAudioContext]);
-
-  // Audio context ref for better performance
-  const audioContextRef = useRef<AudioContext | null>(null);
-  
-  // Initialize audio context once
-  const getAudioContext = useCallback(() => {
-    if (!audioContextRef.current) {
-      try {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      } catch (e) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Audio not supported');
-        }
-        return null;
-      }
-    }
-    return audioContextRef.current;
-  }, []);
 
   // Play coin collection sound (musical arpeggio)
   const playCoinSound = useCallback(() => {
